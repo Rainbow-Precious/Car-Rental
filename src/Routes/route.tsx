@@ -12,9 +12,10 @@ import PricingPage from "../../src/components/HomePage/Navigation/PricingPage";
 import ForgotPasswordPage from "../components/HomePage/Login/ForgotPasswordPage";
 import ResetPasswordPage from "../components/HomePage/Login/ResetPasswordPage";
 import DashboardHome from "../components/AdminDashboard/DashboardHome";
-import StudentManagement from "../components/AdminDashboard/StudentManagement"; 
+import StudentManagement from "../components/AdminDashboard/StudentManagement";
 import TeacherManagement from "../components/AdminDashboard/TeacherManagement";
 import ExamManagement from "../components/AdminDashboard/ExamManagement";
+import Settings from "../components/AdminDashboard/Settings"; // Add this import
 
 export const routes: RouteObject[] = [
   {
@@ -68,6 +69,10 @@ export const routes: RouteObject[] = [
   {
     path: "/admin/exammanagement",
     element: <ExamManagement />,
+  },
+  {
+    path: "/admin/settings",
+    element: <Settings />,
   },
   {
     path: "*",
