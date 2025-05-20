@@ -15,9 +15,13 @@ import DashboardHome from "../components/AdminDashboard/DashboardHome";
 import StudentManagement from "../components/AdminDashboard/StudentManagement";
 import TeacherManagement from "../components/AdminDashboard/TeacherManagement";
 import ExamManagement from "../components/AdminDashboard/ExamManagement";
+<<<<<<< HEAD
 import Settings from "../components/AdminDashboard/Settings";
 import SetupWizard from "../components/SetupWizard/SetupWizard";
 import AuthCheck from "../utils/AuthCheck";
+=======
+
+>>>>>>> c388887cabe0dad3b83ebb43f9e70a9283996670
 
 // Public routes that anyone can access
 export const routes: RouteObject[] = [

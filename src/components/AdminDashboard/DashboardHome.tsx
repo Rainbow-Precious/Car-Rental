@@ -95,8 +95,8 @@ const TopNav: React.FC = () => {
     navigate("/signin");
   };
 
-  // Determine greeting and icon based on current time (04:37 PM WAT)
-  const currentHour = new Date().getHours();
+  // Determine greeting and icon based on current time (02:22 PM WAT)
+  const currentHour = new Date("2025-05-20T14:22:00").getHours();
   const userName = mockUser.name;
   let greeting = "";
   let icon = "🌞"; // Default to sun for daytime
@@ -151,13 +151,15 @@ const TopNav: React.FC = () => {
             />
             <span>{mockUser.name}</span>
           </button>
-          <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg hidden group-hover:block">
-            <Link
-              to="/admin/settings"
-              className="block px-4 py-2 text-white hover:bg-gray-700"
+          <div
+            className="absolute right-0 top-full w-48 bg-gray-800 rounded-lg shadow-lg hidden group-hover:flex flex-col z-50 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+          >
+            <a
+              href="#"
+              className="block px-4 py-2 text-white hover:bg-gray-700 rounded-t-lg"
             >
               Profile
-            </Link>
+            </a>
             <Link
               to="/admin/settings"
               className="block px-4 py-2 text-white hover:bg-gray-700"
@@ -166,7 +168,7 @@ const TopNav: React.FC = () => {
             </Link>
             <button
               onClick={handleLogout}
-              className="block w-full text-left px-4 py-2 text-white hover:bg-gray-700"
+              className="block w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-b-lg"
             >
               Logout
             </button>
