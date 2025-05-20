@@ -15,8 +15,7 @@ import DashboardHome from "../components/AdminDashboard/DashboardHome";
 import StudentManagement from "../components/AdminDashboard/StudentManagement";
 import TeacherManagement from "../components/AdminDashboard/TeacherManagement";
 import ExamManagement from "../components/AdminDashboard/ExamManagement";
-import Settings from "../components/AdminDashboard/Settings";
-import SetupWizard from "../components/SetupWizard/SetupWizard";
+
 
 export const routes: RouteObject[] = [
   {
