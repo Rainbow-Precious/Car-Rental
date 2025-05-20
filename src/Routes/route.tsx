@@ -5,6 +5,9 @@ import { Navigate } from "react-router-dom";
 import Home from "../pages/Home/Home";
 import SignInPage from "../components/HomePage/Login/SignInPage";
 import SignUpPage from "../components/HomePage/Login/SignUpPage";
+import SchoolSignUpPage from "../components/HomePage/Login/SchoolSignUpPage";
+import OrganizationSignUpPage from "../components/HomePage/Login/OrganizationSignUpPage";
+import VerifyOtpPage from "../components/HomePage/Login/VerifyOtpPage";
 import PricingPage from "../../src/components/HomePage/Navigation/PricingPage";
 import ForgotPasswordPage from "../components/HomePage/Login/ForgotPasswordPage";
 import ResetPasswordPage from "../components/HomePage/Login/ResetPasswordPage";
@@ -25,6 +28,18 @@ export const routes: RouteObject[] = [
   {
     path: "/signup",
     element: <SignUpPage />,
+  },
+  {
+    path: "/signup/school",
+    element: <SchoolSignUpPage />,
+  },
+  {
+    path: "/signup/organization",
+    element: <OrganizationSignUpPage />,
+  },
+  {
+    path: "/verify-otp",
+    element: <VerifyOtpPage />,
   },
   {
     path: "/forgot-password",
