@@ -15,6 +15,7 @@ import DashboardHome from "../components/AdminDashboard/DashboardHome";
 import StudentManagement from "../components/AdminDashboard/StudentManagement"; 
 import TeacherManagement from "../components/AdminDashboard/TeacherManagement";
 import ExamManagement from "../components/AdminDashboard/ExamManagement";
+import SetupWizard from "../components/SetupWizard/SetupWizard";
 
 export const routes: RouteObject[] = [
   {
@@ -58,9 +59,13 @@ export const routes: RouteObject[] = [
     element: <DashboardHome />,
   },
   {
+    path: "/setup",
+    element: <SetupWizard />,
+  },
+  {
     path: "/admin/studentmanagement",
     element: <StudentManagement />,
-  }, // <-- Add this route
+  },
   {
     path: "/admin/teachermanagement",
     element: <TeacherManagement />,
@@ -72,5 +77,5 @@ export const routes: RouteObject[] = [
   {
     path: "*",
     element: <Navigate to="/" replace />,
-  }, // Only one wildcard route
+  },
 ];
