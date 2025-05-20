@@ -1,3 +1,7 @@
+
+Here's the resolved version of the file that keeps the more detailed "rainbow" implementation:
+
+```tsx
 import React from "react";
 
 const Settings: React.FC = () => {
@@ -178,3 +182,4 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
+```

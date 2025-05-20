@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "../Navigation/Navigation";
 import Footer from "../Footer";
-import axios from "axios";
+import { apiService } from "../../../utils/api";
 
 export default function VerifyOtpPage() {
   const navigate = useNavigate();
@@ -56,13 +56,10 @@ export default function VerifyOtpPage() {
     setSuccess(null);
 
     try {
-      const response = await axios.post(
-        'http://159.65.31.191/api/Tenant/verify-email',
-        {
-          email: email,
-          otpCode: otp
-        }
-      );
+      const response = await apiService.verifyEmail({
+        email: email,
+        otpCode: otp
+      });
 
       // Check response
       if (response.data.statusCode === 200) {
@@ -83,7 +80,7 @@ export default function VerifyOtpPage() {
     } catch (err: any) {
       console.error("OTP verification error:", err);
       
-      if (err.response && err.response.data) {
+      if (err.response?.data?.message) {
         setError(err.response.data.message || "Verification failed. Please try again.");
       } else if (err.request) {
         setError("Network error. Please check your internet connection and try again.");
@@ -103,13 +100,7 @@ export default function VerifyOtpPage() {
     setSuccess(null);
     
     try {
-      // Call the actual resend OTP API endpoint
-      const response = await axios.post(
-        'http://159.65.31.191/api/Tenant/resend-verification-otp', 
-        {
-          email: email
-        }
-      );
+      const response = await apiService.resendVerificationOtp({ email });
       
       // Check response
       if (response.data.statusCode === 200) {
@@ -136,7 +127,7 @@ export default function VerifyOtpPage() {
     } catch (err: any) {
       console.error("Resend OTP error:", err);
       
-      if (err.response && err.response.data) {
+      if (err.response?.data?.message) {
         setError(err.response.data.message || "Failed to resend OTP. Please try again.");
       } else if (err.request) {
         setError("Network error. Please check your internet connection and try again.");
