@@ -43,18 +43,6 @@ export default function Navigation() {
             Sign In
           </Link>
           <Link
-            to="/signup/school"
-            className="relative text-gray-200 font-semibold py-2 px-1 transition-all duration-300 hover:text-yellow-400 after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-0.5 after:bg-yellow-400 after:transition-all after:duration-300 hover:after:w-full"
-          >
-            As School
-          </Link>
-          <Link
-            to="/signup/organization"
-            className="relative text-gray-200 font-semibold py-2 px-1 transition-all duration-300 hover:text-yellow-400 after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-0.5 after:bg-yellow-400 after:transition-all after:duration-300 hover:after:w-full"
-          >
-            As Organization
-          </Link>
-          <Link
             to="/signup"
             className="ml-4 border border-yellow-400 px-5 py-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold shadow-md hover:from-yellow-500 hover:to-yellow-600 hover:shadow-lg hover:scale-105 transition-all duration-300"
           >

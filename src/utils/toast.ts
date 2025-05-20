@@ -1,41 +1,74 @@
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 // Success toast with custom styling
 export const showSuccess = (message: string) => {
-  toast.success(message, {
+  console.log("Success toast:", message);
+  return toast.success(message, {
     duration: 3000,
-    icon: '✅',
+    position: 'top-center',
+    style: {
+      background: '#10B981',
+      color: 'white',
+      padding: '16px',
+      borderRadius: '8px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+    },
   });
 };
 
 // Error toast with custom styling
 export const showError = (message: string) => {
-  toast.error(message, {
-    duration: 5000, // Errors stay longer
-    icon: '❌',
+  console.log("Showing error toast:", message);
+  
+  // Clear any existing toasts to make sure error is seen
+  toast.dismiss();
+  
+  // Make sure the message is displayed prominently
+  return toast.error(message, {
+    duration: 8000, // Longer duration for errors
+    position: 'top-center',
+    style: {
+      background: '#EF4444',
+      color: 'white',
+      padding: '16px',
+      borderRadius: '8px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    },
   });
 };
 
 // Info toast with custom styling
 export const showInfo = (message: string) => {
-  toast(message, {
+  return toast(message, {
     duration: 3000,
+    position: 'top-center',
     icon: 'ℹ️',
     style: {
       background: '#3B82F6',
       color: 'white',
+      padding: '16px',
+      borderRadius: '8px',
+      fontSize: '16px',
     },
   });
 };
 
 // Warning toast with custom styling
 export const showWarning = (message: string) => {
-  toast(message, {
-    duration: 4000,
+  return toast(message, {
+    duration: 6000,
+    position: 'top-center',
     icon: '⚠️',
     style: {
       background: '#F59E0B',
       color: 'white',
+      padding: '16px',
+      borderRadius: '8px',
+      fontSize: '16px',
+      fontWeight: 'bold',
     },
   });
 };
@@ -43,9 +76,13 @@ export const showWarning = (message: string) => {
 // Loading toast that can be dismissed programmatically
 export const showLoading = (message: string) => {
   return toast.loading(message, {
+    position: 'top-center',
     style: {
       background: '#6B7280',
       color: 'white',
+      padding: '16px',
+      borderRadius: '8px',
+      fontSize: '16px',
     },
   });
 };
@@ -58,4 +95,7 @@ export const dismissToast = (toastId: string) => {
 // Helper to dismiss all toasts
 export const dismissAllToasts = () => {
   toast.dismiss();
-}; 
+};
+
+// Export ToastContainer for App.tsx
+export { Toaster }; 

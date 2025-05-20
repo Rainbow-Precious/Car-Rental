@@ -1,10 +1,25 @@
+<<<<<<< HEAD
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+=======
 
 Here's the resolved version of the file that keeps the more detailed "rainbow" implementation:
 
 ```tsx
 import React from "react";
+>>>>>>> c388887cabe0dad3b83ebb43f9e70a9283996670
 
 const Settings: React.FC = () => {
+  const navigate = useNavigate();
+
+  // Simple authentication check
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      navigate('/signin');
+    }
+  }, [navigate]);
+  
   return (
     <div className="px-4 py-8 bg-gray-900 text-white min-h-screen w-screen flex flex-col items-center">
       <div className="w-full max-w-6xl">

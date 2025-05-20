@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Mock user data for the navbar
@@ -86,7 +86,13 @@ const TopNav: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    navigate("/login");
+    // Clear any user session data
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('isSetupComplete');
+    
+    // Redirect to login page
+    navigate("/signin");
   };
 
   // Determine greeting and icon based on current time (02:22 PM WAT)
@@ -177,11 +183,21 @@ const TopNav: React.FC = () => {
 };
 
 const DashboardHome: React.FC = () => {
+  const navigate = useNavigate();
+
+  // Simple authentication check
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      navigate('/signin');
+    }
+  }, [navigate]);
+
   return (
     <div className="min-h-screen w-screen bg-black flex flex-col">
       <TopNav />
-      <main className="flex-1 flex flex-col items-center justify-start py-8">
-        <div className="w-full max-w-6xl px-4 space-y-6">
+      <main className="flex-1 py-8 px-6">
+        <div className="w-full space-y-6">
           {/* School Overview and Exam Schedule Combined Horizontally */}
           <div className="bg-gray-800 p-6 rounded-lg flex flex-col md:flex-row md:space-x-6">
             {/* School Overview */}

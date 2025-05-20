@@ -15,8 +15,15 @@ import DashboardHome from "../components/AdminDashboard/DashboardHome";
 import StudentManagement from "../components/AdminDashboard/StudentManagement";
 import TeacherManagement from "../components/AdminDashboard/TeacherManagement";
 import ExamManagement from "../components/AdminDashboard/ExamManagement";
+<<<<<<< HEAD
+import Settings from "../components/AdminDashboard/Settings";
+import SetupWizard from "../components/SetupWizard/SetupWizard";
+import AuthCheck from "../utils/AuthCheck";
+=======
 
+>>>>>>> c388887cabe0dad3b83ebb43f9e70a9283996670
 
+// Public routes that anyone can access
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -54,30 +61,34 @@ export const routes: RouteObject[] = [
     path: "/reset-password",
     element: <ResetPasswordPage />,
   },
+  
+  // Protected routes - require authentication
   {
     path: "/dashboard",
-    element: <DashboardHome />,
+    element: <AuthCheck><DashboardHome /></AuthCheck>,
   },
   {
     path: "/setup",
-    element: <SetupWizard />,
+    element: <AuthCheck><SetupWizard /></AuthCheck>,
   },
   {
     path: "/admin/studentmanagement",
-    element: <StudentManagement />,
+    element: <AuthCheck><StudentManagement /></AuthCheck>,
   },
   {
     path: "/admin/teachermanagement",
-    element: <TeacherManagement />,
+    element: <AuthCheck><TeacherManagement /></AuthCheck>,
   },
   {
     path: "/admin/exammanagement",
-    element: <ExamManagement />,
+    element: <AuthCheck><ExamManagement /></AuthCheck>,
   },
   {
     path: "/admin/settings",
-    element: <Settings />,
+    element: <AuthCheck><Settings /></AuthCheck>,
   },
+  
+  // Catch-all route
   {
     path: "*",
     element: <Navigate to="/" replace />,

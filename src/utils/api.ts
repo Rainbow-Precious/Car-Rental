@@ -99,7 +99,20 @@ export const apiService = {
   
   // Auth API
   login: (data: { email: string, password: string }) => {
-    return api.post('/Auth/login', data);
+    return api.post('/Tenant/login', data);
+  },
+  
+  // Password Reset API
+  forgotPassword: (data: { email: string }) => {
+    return api.post('/Password/forgot-password', data);
+  },
+  
+  validateResetToken: (data: { token: string }) => {
+    return api.post('/Password/validate-reset-token', data);
+  },
+  
+  resetPassword: (data: { token: string, email: string, newPassword: string }) => {
+    return api.post('/Password/reset-password', data);
   },
   
   // Verification API
