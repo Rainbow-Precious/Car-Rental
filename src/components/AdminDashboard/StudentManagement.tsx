@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 // Mock data for static UI
 const initialStudents = [
@@ -22,10 +22,20 @@ const campuses = [
 ];
 
 const StudentManagement: React.FC = () => {
+  const navigate = useNavigate();
+
+  // Simple authentication check
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      navigate('/signin');
+    }
+  }, [navigate]);
+
   return (
     <div className="min-h-screen w-screen bg-black flex flex-col">
-      <main className="flex-1 flex flex-col items-center justify-start py-8">
-        <div className="w-full max-w-6xl px-4 space-y-6">
+      <main className="flex-1 py-8 px-6">
+        <div className="w-full space-y-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-white">Student Management</h1>
             <div className="space-x-3">

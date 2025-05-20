@@ -2,34 +2,36 @@ import React, { useState } from "react";
 import Navigation from "../Navigation/Navigation";
 import Footer from "../Footer";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { SetupStage } from "../../SetupWizard/SetupWizard";
 import { apiService } from "../../../utils/api";
+import { showError, showSuccess, showLoading, dismissToast } from "../../../utils/toast";
 
 export default function SignInPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!email || !password) {
-      setError("Please enter both email and password");
+      showError("Please enter both email and password");
       return;
     }
 
     setIsLoading(true);
-    setError(null);
+    const loadingToastId = showLoading("Signing in...");
 
     try {
       const response = await apiService.login({ email, password });
 
       // Check for successful response
       if (response.data.statusCode === 200) {
+        dismissToast(loadingToastId);
+        showSuccess("Login successful!");
+        
         const userData = response.data.data;
         
         // Save auth token and user data
@@ -121,17 +123,30 @@ export default function SignInPage() {
           fallbackSetupCheck(userData);
         }
       } else {
-        setError(response.data.message || "Login failed. Please check your credentials.");
+        dismissToast(loadingToastId);
+        console.log("Login failed with status:", response.data.statusCode);
+        showError(response.data.message || "Login failed. Please check your credentials.");
       }
     } catch (err: any) {
       console.error("Login error:", err);
+      dismissToast(loadingToastId);
       
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
+      // Handle API error response
+      if (err.response) {
+        console.log("Error response status:", err.response.status);
+        console.log("Error response data:", err.response.data);
+        
+        if (err.response.status === 400) {
+          // Extract error message from standardized API response format
+          const errorMessage = err.response.data.message || "Invalid credentials";
+          showError(errorMessage);
+        } else {
+          showError(err.response.data.message || "Login failed. Please try again.");
+        }
       } else if (err.message) {
-        setError(err.message);
+        showError(err.message);
       } else {
-        setError("An error occurred during login. Please try again.");
+        showError("An error occurred during login. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -269,31 +284,39 @@ export default function SignInPage() {
           </h2>
         </div>
         
-        {error && (
-          <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-4">
-            <p>{error}</p>
-          </div>
-        )}
-        
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="bg-black border border-gray-700 px-4 py-2 rounded focus:outline-none focus:border-yellow-500"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={isLoading}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="bg-black border border-gray-700 px-4 py-2 rounded focus:outline-none focus:border-yellow-500"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isLoading}
-          />
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter your email"
+              className="w-full bg-black border border-gray-700 px-4 py-2 rounded focus:outline-none focus:border-yellow-500"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+              className="w-full bg-black border border-gray-700 px-4 py-2 rounded focus:outline-none focus:border-yellow-500"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
           <div className="flex justify-end text-sm">
             <Link
               to="/forgot-password"
@@ -302,6 +325,7 @@ export default function SignInPage() {
               Forgot Password?
             </Link>
           </div>
+          
           <button
             type="submit"
             className={`bg-yellow-500 text-black font-semibold py-2 rounded hover:bg-yellow-400 flex justify-center items-center ${
@@ -322,6 +346,7 @@ export default function SignInPage() {
             )}
           </button>
         </form>
+        
         <p className="text-center text-sm text-gray-400 mt-4">
           Don't have an account?{" "}
           <Link

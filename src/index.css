@@ -71,3 +71,32 @@ button:focus-visible {
     }
   }
 }
+
+/* Blinking/pulsing animation for the Add Teacher button */
+@keyframes pulse-yellow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7);
+    transform: scale(1);
+  }
+  
+  70% {
+    box-shadow: 0 0 0 15px rgba(253, 224, 71, 0);
+    transform: scale(1.05);
+  }
+  
+  100% {
+    box-shadow: 0 0 0 0 rgba(253, 224, 71, 0);
+    transform: scale(1);
+  }
+}
+
+.btn-pulse {
+  animation: pulse-yellow 2s infinite;
+}
+
+/* Empty state styling */
+.empty-state-container {
+  background: linear-gradient(to bottom right, #1f2937, #111827);
+  border: 1px solid #374151;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
