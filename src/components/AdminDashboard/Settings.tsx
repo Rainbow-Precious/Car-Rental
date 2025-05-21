@@ -1,13 +1,5 @@
-<<<<<<< HEAD
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-=======
-
-Here's the resolved version of the file that keeps the more detailed "rainbow" implementation:
-
-```tsx
-import React from "react";
->>>>>>> c388887cabe0dad3b83ebb43f9e70a9283996670
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -197,4 +189,3 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
-```

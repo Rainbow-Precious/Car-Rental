@@ -95,6 +95,8 @@ const TeacherManagement: React.FC = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [activeDropdownPos, setActiveDropdownPos] = useState<{ top: number, left: number } | null>(null);
   const actionButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [newTeacherData, setNewTeacherData] = useState<Teacher | null>(null);
 
   // Form data state
   const [formData, setFormData] = useState<TeacherFormData>({
@@ -282,12 +284,26 @@ const TeacherManagement: React.FC = () => {
       if (response.data.statusCode === 200) {
         setFormSuccess("Teacher added successfully!");
         
-        // Refresh the teacher list after a short delay
-        setTimeout(() => {
-          setShowAddForm(false);
-          // Reload the teacher list
-          window.location.reload();
-        }, 2000);
+        // Set the data of the newly created teacher
+        setNewTeacherData({
+          id: response.data.data.id || "temp-id",
+          firstName: formData.firstName,
+          middleName: formData.middleName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+          gender: formData.gender,
+          classId: formData.classId,
+          armId: formData.armId,
+          campusId: formData.campusId,
+          className: classes.find(c => c.classId === formData.classId)?.className || "",
+          armName: getFilteredArms().find(a => a.armId === formData.armId)?.armName || "",
+          campusName: campuses.find(c => c.id === formData.campusId)?.name || ""
+        });
+        
+        // Show success modal instead of reloading immediately
+        setShowSuccessModal(true);
+        setShowAddForm(false);
       } else {
         setFormError(`Error: ${response.data.message}`);
       }
@@ -656,6 +672,114 @@ const TeacherManagement: React.FC = () => {
     );
   };
 
+  // Success confirmation modal
+  const successModal = (
+    <div className={`fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center ${showSuccessModal ? 'block' : 'hidden'}`}>
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-gray-700 relative overflow-hidden">
+        {/* Confetti elements */}
+        <div className="absolute top-5 left-5 w-3 h-8 bg-yellow-500 transform rotate-45 opacity-70 animate-pulse"></div>
+        <div className="absolute top-10 right-10 w-4 h-4 bg-green-400 rounded-full opacity-60 animate-ping"></div>
+        <div className="absolute bottom-10 left-20 w-2 h-6 bg-blue-500 transform -rotate-12 opacity-60"></div>
+        <div className="absolute top-20 right-5 w-2 h-2 bg-pink-400 rounded-full opacity-70 animate-pulse"></div>
+        <div className="absolute bottom-5 right-14 w-3 h-3 bg-purple-500 transform rotate-45 opacity-60 animate-bounce"></div>
+        
+        {/* Success Banner */}
+        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-green-400 to-green-600"></div>
+        
+        {/* Success Icon */}
+        <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-tr from-green-500 to-green-400 flex items-center justify-center mb-4 transform transition-all duration-500 animate-bounce">
+          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        
+        <h2 className="text-2xl font-bold text-center text-white mb-1">Teacher Added Successfully!</h2>
+        <p className="text-gray-400 text-center mb-6">The new teacher account has been created and is ready to use.</p>
+        
+        {/* Teacher Card */}
+        {newTeacherData && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700 shadow-inner">
+            <div className="flex items-start">
+              <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center mr-3 flex-shrink-0">
+                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-lg">{`${newTeacherData.firstName} ${newTeacherData.lastName}`}</h3>
+                <p className="text-gray-400 text-sm mb-1">{newTeacherData.email}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-300">
+                    {newTeacherData.className} / {newTeacherData.armName}
+                  </span>
+                  <span className="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-300">
+                    {newTeacherData.campusName}
+                  </span>
+                  <span className="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-300">
+                    {newTeacherData.gender}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex flex-col space-y-2">
+          <button 
+            onClick={() => {
+              setShowSuccessModal(false);
+              // Reset form data
+              setFormData({
+                firstName: "",
+                middleName: "",
+                lastName: "",
+                email: "",
+                phoneNumber: "",
+                gender: "Male",
+                classId: "",
+                armId: "",
+                campusId: ""
+              });
+              // Refresh the page to show updated teacher list
+              window.location.reload();
+            }}
+            className="bg-green-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-600 transition-all duration-200 flex items-center justify-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            View Teacher List
+          </button>
+          
+          <button 
+            onClick={() => {
+              setShowSuccessModal(false);
+              setShowAddForm(true);
+              // Reset form data
+              setFormData({
+                firstName: "",
+                middleName: "",
+                lastName: "",
+                email: "",
+                phoneNumber: "",
+                gender: "Male",
+                classId: "",
+                armId: "",
+                campusId: ""
+              });
+            }}
+            className="bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-600 transition-all duration-200 flex items-center justify-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Another Teacher
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen w-screen bg-black flex flex-col">
       <main className="flex-1 py-8 px-6">
@@ -763,6 +887,8 @@ const TeacherManagement: React.FC = () => {
       {teacherForm}
       {/* Render dropdown portal */}
       {renderDropdownPortal()}
+      {/* Render success modal */}
+      {successModal}
     </div>
   );
 };
