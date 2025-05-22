@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { createPortal } from "react-dom";
 import AdminLayout from "./Layout/AdminLayout";
+import Spinner from "../common/Spinner";
+import api from "../../utils/api";
 
 // Define Student interface
 interface Student {
@@ -135,86 +137,46 @@ const StudentManagement: React.FC = () => {
     profilePicture: null
   });
 
-  // Simple authentication check
-  useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-      navigate('/signin');
-      return;
-    }
+  // Fetch data from the API
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch students
+      const studentsResponse = await api.get('/Tenant/students');
+      
+      // Fetch campuses
+      const campusesResponse = await api.get('/Tenant/campuses');
+      
+      // Fetch arms
+      const armsResponse = await api.get('/Tenant/arms');
+      
+      // Fetch classes
+      const classesResponse = await api.get('/Class/all-with-arms');
 
-    // Fetch data from the API
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('authToken');
-        
-        // Fetch students
-        const studentsResponse = await axios.get('http://159.65.31.191/api/Tenant/students', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
-
-        // Fetch campuses
-        const campusesResponse = await axios.get('http://159.65.31.191/api/Tenant/campuses', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
-        
-        // Fetch arms
-        const armsResponse = await axios.get('http://159.65.31.191/api/Tenant/arms', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
-        
-        // Fetch classes with arms
-        const classesResponse = await axios.get('http://159.65.31.191/api/Class/all-with-arms', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
-
-        if (studentsResponse.data.statusCode === 200) {
-          setStudents(studentsResponse.data.data || []);
-        } else {
-          setError(`Error fetching students: ${studentsResponse.data.message}`);
-        }
-
-        if (campusesResponse.data.statusCode === 200) {
-          setCampuses(campusesResponse.data.data || []);
-        } else {
-          console.error("Failed to fetch campuses:", campusesResponse.data.message);
-        }
-        
-        if (armsResponse.data.statusCode === 200) {
-          setArms(armsResponse.data.data || []);
-        } else {
-          console.error("Failed to fetch arms:", armsResponse.data.message);
-        }
-        
-        if (classesResponse.data.statusCode === 200) {
-          setClasses(classesResponse.data.data || []);
-        } else {
-          console.error("Failed to fetch classes:", classesResponse.data.message);
-        }
-          
-      } catch (err: any) {
-        console.error("Failed to fetch data:", err);
-        setError(err.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
+      if (studentsResponse.data.statusCode === 200) {
+        setStudents(studentsResponse.data.data || []);
       }
-    };
-
-    fetchData();
-  }, [navigate]);
+      
+      if (campusesResponse.data.statusCode === 200) {
+        setCampuses(campusesResponse.data.data || []);
+      }
+      
+      if (armsResponse.data.statusCode === 200) {
+        setArms(armsResponse.data.data || []);
+      }
+      
+      if (classesResponse.data.statusCode === 200) {
+        setClasses(classesResponse.data.data || []);
+      }
+        
+    } catch (err: any) {
+      console.error("Failed to fetch data:", err);
+      setError(err.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter arms based on selected class using the embedded arms in the class data
   const getFilteredArms = () => {
@@ -285,124 +247,22 @@ const StudentManagement: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setFormSuccess(null);
-    
-    // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.admissionNumber) {
-      setFormError("First name, last name, email, and admission number are required.");
-      return;
-    }
-    
-    if (!formData.classId) {
-      setFormError("Please select a class.");
-      return;
-    }
-    
-    if (!formData.armId) {
-      setFormError("Please select an arm.");
-      return;
-    }
-    
-    if (!formData.campusId) {
-      setFormError("Please select a campus.");
-      return;
-    }
-    
+  const handleRegisterStudent = async (formData: any) => {
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('authToken');
       
-      // Create FormData if there's a profile picture
-      let requestData: any = {...formData};
-      delete requestData.profilePicture; // Remove file object from JSON data
-      
-      let response;
-      
-      if (profilePicture) {
-        const formDataObj = new FormData();
-        
-        // First ensure required fields are included with proper naming
-        formDataObj.append('firstName', formData.firstName);
-        formDataObj.append('lastName', formData.lastName);
-        formDataObj.append('email', formData.email); // Explicitly add email
-        formDataObj.append('admissionNumber', formData.admissionNumber);
-        formDataObj.append('gender', formData.gender);
-        formDataObj.append('classId', formData.classId);
-        formDataObj.append('armId', formData.armId);
-        formDataObj.append('campusId', formData.campusId);
-        
-        // Add optional fields if they exist
-        if (formData.middleName) {
-          formDataObj.append('middleName', formData.middleName);
-        }
-        
-        // Append profile picture
-        formDataObj.append('profilePicture', profilePicture);
-        
-        // Log form data for debugging
-        console.log("FormData entries:");
-        for (let pair of formDataObj.entries()) {
-          console.log(pair[0] + ': ' + pair[1]);
-        }
-        
-        response = await axios.post(
-          'http://159.65.31.191/api/Tenant/register-student',
-          formDataObj,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
-              'accept': 'text/plain'
-            }
-          }
-        );
-      } else {
-        // Regular JSON request without profile picture
-        response = await axios.post(
-          'http://159.65.31.191/api/Tenant/register-student',
-          requestData,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-              'accept': 'text/plain'
-            }
-          }
-        );
-      }
-      
-      if (response.data.statusCode === 200) {
-        setFormSuccess(response.data.message || "Student added successfully! Student must change password on first login.");
-        
-        // Set the data of the newly created student
-        setNewStudentData({
-          id: response.data.data?.id || "temp-id",
-          firstName: formData.firstName,
-          middleName: formData.middleName,
-          lastName: formData.lastName,
-          email: formData.email,
-          admissionNumber: formData.admissionNumber,
-          gender: formData.gender,
-          classId: formData.classId,
-          armId: formData.armId,
-          campusId: formData.campusId,
-          className: classes.find(c => c.classId === formData.classId)?.className || "",
-          armName: getFilteredArms().find(a => a.armId === formData.armId)?.armName || "",
-          campusName: campuses.find(c => c.id === formData.campusId)?.name || ""
-        });
-        
-        // Show success modal instead of reloading immediately
-        setShowSuccessModal(true);
+      const response = await api.post('/Tenant/register-student', formData);
+
+      if (response.data.statusCode === 201) {
+        // Handle success
         setShowAddForm(false);
+        await fetchData(); // Refresh the list
+        setFormSuccess(response.data.message || "Student registered successfully!");
       } else {
-        setFormError(`Error: ${response.data.message}`);
+        setFormError(response.data.message || "Failed to register student");
       }
     } catch (err: any) {
-      console.error("Failed to add student:", err);
-      setFormError(err.response?.data?.message || err.message || "Failed to add student");
+      setFormError(err.message || "Failed to register student");
     } finally {
       setSubmitting(false);
     }
@@ -483,7 +343,7 @@ const StudentManagement: React.FC = () => {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleRegisterStudent} className="space-y-4">
           <div className="grid grid-cols-12 gap-4">
             {/* Profile Picture Upload - Left column */}
             <div className="col-span-4 bg-gray-800 p-4 rounded-lg shadow-inner flex flex-col items-center">
@@ -721,10 +581,7 @@ const StudentManagement: React.FC = () => {
             >
               {submitting ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-black inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <Spinner />
                   Creating...
                 </>
               ) : (

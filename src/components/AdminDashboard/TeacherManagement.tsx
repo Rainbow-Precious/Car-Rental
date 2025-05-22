@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { createPortal } from "react-dom";
 import AdminLayout from "./Layout/AdminLayout";
+import Spinner from "../common/Spinner";
+import api from "../../utils/api";
+import { createPortal } from "react-dom";
 
 // Define Teacher interface
 interface Teacher {
@@ -112,86 +113,129 @@ const TeacherManagement: React.FC = () => {
     campusId: ""
   });
 
-  // Simple authentication check
+  // Fetch data from the API
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch teachers
+      const teachersResponse = await api.get('/Tenant/teachers');
+      
+      // Fetch campuses
+      const campusesResponse = await api.get('/Tenant/campuses');
+      
+      // Fetch arms
+      const armsResponse = await api.get('/Tenant/arms');
+      
+      // Fetch classes
+      const classesResponse = await api.get('/Class/all-with-arms');
+
+      if (teachersResponse.data.statusCode === 200) {
+        setTeachers(teachersResponse.data.data || []);
+      } else {
+        console.error("Teacher API error:", teachersResponse.data);
+        setError(`Error fetching teachers: ${teachersResponse.data.message || 'Unknown error'}`);
+        setLoading(false);
+        return;
+      }
+      
+      if (campusesResponse.data.statusCode === 200) {
+        setCampuses(campusesResponse.data.data || []);
+      } else {
+        console.error("Campus API error:", campusesResponse.data);
+      }
+      
+      if (armsResponse.data.statusCode === 200) {
+        setArms(armsResponse.data.data || []);
+      } else {
+        console.error("Arms API error:", armsResponse.data);
+      }
+      
+      if (classesResponse.data.statusCode === 200) {
+        setClasses(classesResponse.data.data || []);
+      } else {
+        console.error("Classes API error:", classesResponse.data);
+      }
+      
+      // Always set loading to false even if some requests failed
+      setLoading(false);
+        
+    } catch (err: any) {
+      console.error("Failed to fetch data:", err);
+      setError(err.message || "Failed to fetch data");
+      setLoading(false);
+    }
+  };
+
+  // Add useEffect to fetch data on mount
   useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
+    // Check authentication
+    const token = localStorage.getItem('authToken');
+    if (!token) {
       navigate('/signin');
       return;
     }
 
-    // Fetch data from the API
-    const fetchData = async () => {
+    // Create a flag to prevent state updates after unmount
+    let isSubscribed = true;
+    
+    const loadData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('authToken');
         
         // Fetch teachers
-        const teachersResponse = await axios.get('http://159.65.31.191/api/Tenant/teachers', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
-
+        const teachersResponse = await api.get('/Tenant/teachers');
+        
         // Fetch campuses
-        const campusesResponse = await axios.get('http://159.65.31.191/api/Tenant/campuses', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
+        const campusesResponse = await api.get('/Tenant/campuses');
         
         // Fetch arms
-        const armsResponse = await axios.get('http://159.65.31.191/api/Tenant/arms', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
+        const armsResponse = await api.get('/Tenant/arms');
         
-        // Fetch classes with arms
-        const classesResponse = await axios.get('http://159.65.31.191/api/Class/all-with-arms', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
+        // Fetch classes
+        const classesResponse = await api.get('/Class/all-with-arms');
 
-        if (teachersResponse.data.statusCode === 200) {
-          setTeachers(teachersResponse.data.data || []);
-        } else {
-          setError(`Error fetching teachers: ${teachersResponse.data.message}`);
-        }
-
-        if (campusesResponse.data.statusCode === 200) {
-          setCampuses(campusesResponse.data.data || []);
-        } else {
-          console.error("Failed to fetch campuses:", campusesResponse.data.message);
-        }
-        
-        if (armsResponse.data.statusCode === 200) {
-          setArms(armsResponse.data.data || []);
-        } else {
-          console.error("Failed to fetch arms:", armsResponse.data.message);
-        }
-        
-        if (classesResponse.data.statusCode === 200) {
-          setClasses(classesResponse.data.data || []);
-        } else {
-          console.error("Failed to fetch classes:", classesResponse.data.message);
-        }
+        // Only update state if component is still mounted
+        if (isSubscribed) {
+          if (teachersResponse.data.statusCode === 200) {
+            setTeachers(teachersResponse.data.data || []);
+          } else {
+            console.error("Teacher API error:", teachersResponse.data);
+            setError(`Error fetching teachers: ${teachersResponse.data.message || 'Unknown error'}`);
+          }
           
+          if (campusesResponse.data.statusCode === 200) {
+            setCampuses(campusesResponse.data.data || []);
+          }
+          
+          if (armsResponse.data.statusCode === 200) {
+            setArms(armsResponse.data.data || []);
+          }
+          
+          if (classesResponse.data.statusCode === 200) {
+            setClasses(classesResponse.data.data || []);
+          }
+          
+          // Always set loading to false
+          setLoading(false);
+        }
       } catch (err: any) {
-        console.error("Failed to fetch data:", err);
-        setError(err.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
+        // Only update state if component is still mounted
+        if (isSubscribed) {
+          console.error("Failed to fetch data:", err);
+          setError(err.message || "Failed to fetch data");
+          setLoading(false);
+        }
       }
     };
 
-    fetchData();
-  }, [navigate]);
+    loadData();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isSubscribed = false;
+    };
+  }, [navigate]); // Only run on mount and when navigate changes
 
   const handleAddTeacher = () => {
     setShowAddForm(true);
@@ -240,77 +284,22 @@ const TeacherManagement: React.FC = () => {
     return arms.filter(arm => arm.classId === formData.classId);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setFormSuccess(null);
-    
-    // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      setFormError("First name, last name, and email are required.");
-      return;
-    }
-    
-    if (!formData.classId) {
-      setFormError("Please select a class.");
-      return;
-    }
-    
-    if (!formData.armId) {
-      setFormError("Please select an arm.");
-      return;
-    }
-    
-    if (!formData.campusId) {
-      setFormError("Please select a campus.");
-      return;
-    }
-    
+  const handleInviteTeacher = async (formData: any) => {
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('authToken');
       
-      const response = await axios.post(
-        'http://159.65.31.191/api/Tenant/register-teacher',
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'accept': 'text/plain'
-          }
-        }
-      );
-      
-      if (response.data.statusCode === 200) {
-        setFormSuccess("Teacher added successfully!");
-        
-        // Set the data of the newly created teacher
-        setNewTeacherData({
-          id: response.data.data.id || "temp-id",
-          firstName: formData.firstName,
-          middleName: formData.middleName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          gender: formData.gender,
-          classId: formData.classId,
-          armId: formData.armId,
-          campusId: formData.campusId,
-          className: classes.find(c => c.classId === formData.classId)?.className || "",
-          armName: getFilteredArms().find(a => a.armId === formData.armId)?.armName || "",
-          campusName: campuses.find(c => c.id === formData.campusId)?.name || ""
-        });
-        
-        // Show success modal instead of reloading immediately
-        setShowSuccessModal(true);
+      const response = await api.post('/Tenant/register-teacher', formData);
+
+      if (response.data.statusCode === 201) {
+        // Handle success
         setShowAddForm(false);
+        await fetchData(); // Refresh the list
+        setFormSuccess("Teacher invited successfully!");
       } else {
-        setFormError(`Error: ${response.data.message}`);
+        setFormError(response.data.message || "Failed to invite teacher");
       }
     } catch (err: any) {
-      console.error("Failed to add teacher:", err);
-      setFormError(err.response?.data?.message || err.message || "Failed to add teacher");
+      setFormError(err.message || "Failed to invite teacher");
     } finally {
       setSubmitting(false);
     }
@@ -391,7 +380,7 @@ const TeacherManagement: React.FC = () => {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleInviteTeacher} className="space-y-4">
           <div className="bg-gray-800 p-4 rounded-lg shadow-inner">
             <h3 className="text-gray-300 text-sm font-semibold mb-3 flex items-center">
               <svg className="w-4 h-4 mr-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -788,14 +777,14 @@ const TeacherManagement: React.FC = () => {
           <div className="space-x-3">
             <button 
               onClick={handleAddTeacher}
-              className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400"
+              className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400 transition-all duration-200"
             >
               Add Teacher
             </button>
             <a
               href="/templates/teachers-template.csv"
               download
-              className="bg-gray-700 text-white font-semibold py-2 px-4 rounded hover:bg-gray-600"
+              className="bg-gray-700 text-white font-semibold py-2 px-4 rounded hover:bg-gray-600 transition-all duration-200"
             >
               Download CSV Template
             </a>
@@ -804,17 +793,39 @@ const TeacherManagement: React.FC = () => {
 
         {/* Import Form (static) */}
         <div className="bg-gray-800 p-4 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4 text-white">Import Teachers</h2>
-          <div className="flex space-x-3">
-            <button className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400">
-              Import Teachers from CSV
-            </button>
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold mb-4 text-white">Import Teachers</h2>
+              <button className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400 transition-all duration-200">
+                Import Teachers from CSV
+              </button>
+            </div>
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => navigate('/admin/pending-invites')}
+                className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400 transition-all duration-200 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                View Pending Invites
+              </button>
+              <button 
+                onClick={() => navigate('/admin/invite-teacher')}
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-2 px-4 rounded hover:from-yellow-400 hover:to-yellow-500 transition-all duration-200 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Invite Teacher
+              </button>
+            </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-white text-xl">Loading...</div>
+          <div className="flex items-center justify-center h-[calc(100vh-300px)]">
+            <Spinner size="lg" text="Loading teachers..." />
           </div>
         ) : error ? (
           <div className="bg-red-500 text-white p-4 rounded-lg">

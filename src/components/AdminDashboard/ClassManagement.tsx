@@ -4,6 +4,8 @@ import axios from "axios";
 import AdminLayout from "./Layout/AdminLayout";
 import Spinner from "../common/Spinner";
 import AddArmModal from "./ClassManagement/AddArmModal";
+import api from "../../utils/api";
+import { toast } from 'react-hot-toast';
 
 interface Class {
   classId: string;
@@ -29,6 +31,43 @@ interface Arm {
   createdAt: string;
 }
 
+interface ArmInput {
+  name: string;
+  description?: string;
+}
+
+interface ClassInput {
+  name: string;
+  campusId: string;
+  arms: ArmInput[];
+}
+
+interface Campus {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  phoneNumber: string;
+  email: string;
+  capacity: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  studentCount: number;
+  teacherCount: number;
+}
+
+interface TeacherInviteForm {
+  email: string;
+  classId: string;
+  armId: string;
+  campusId: string;
+}
+
 // Mock data for class performance
 const classPerformance = [
   { className: "Primary 1", averageScore: 78, passRate: 82 },
@@ -42,7 +81,7 @@ const classPerformance = [
 const ClassManagement: React.FC = () => {
   const navigate = useNavigate();
   const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddArmForm, setShowAddArmForm] = useState(false);
@@ -53,69 +92,89 @@ const ClassManagement: React.FC = () => {
   const [isAddClassOpen, setIsAddClassOpen] = useState(false);
   
   // Add Class form state
-  const [newClassName, setNewClassName] = useState("");
-  const [newClassCampusId, setNewClassCampusId] = useState("");
-  const [campusList, setCampusList] = useState<{campusId: string, campusName: string}[]>([]);
+  const [formData, setFormData] = useState<ClassInput>({
+    name: "",
+    campusId: "",
+    arms: [{ name: "", description: "" }]
+  });
+  const [campusList, setCampusList] = useState<Campus[]>([]);
   const [addClassLoading, setAddClassLoading] = useState(false);
   const [addClassError, setAddClassError] = useState<string | null>(null);
   const [addClassSuccess, setAddClassSuccess] = useState(false);
   const [formTab, setFormTab] = useState<"basic" | "advanced">("basic");
+
+  // Add these states
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [selectedClassForInvite, setSelectedClassForInvite] = useState<Class | null>(null);
+  const [selectedArm, setSelectedArm] = useState<string>('');
+  const [inviteForm, setInviteForm] = useState<TeacherInviteForm>({
+    email: '',
+    classId: '',
+    armId: '',
+    campusId: ''
+  });
 
   // Get unique campuses for filter
   const campuses = classes.length 
     ? [...new Set(classes.map(c => c.campusName))]
     : [];
 
-  // Simple authentication check
-  useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-      navigate('/signin');
-      return;
-    }
-
-    // Fetch data from the API
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('authToken');
-        
-        // Fetch classes with arms
-        const classesResponse = await axios.get('http://159.65.31.191/api/Class/all-with-arms', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
-
-        if (classesResponse.data.statusCode === 200) {
-          setClasses(classesResponse.data.data || []);
-        } else {
-          setError(`Error fetching classes: ${classesResponse.data.message}`);
-        }
-          
-      } catch (err: any) {
-        console.error("Failed to fetch data:", err);
-        setError(err.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
+  // Update the fetchData function
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        navigate('/signin');
+        return;
       }
+
+      // Fetch classes with arms
+      const classesResponse = await axios.get('http://159.65.31.191/api/Class/all-with-arms', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'accept': 'text/plain'
+        }
+      });
+
+      if (classesResponse.data.statusCode === 200) {
+        setClasses(classesResponse.data.data || []);
+      } else {
+        setError(`Error fetching classes: ${classesResponse.data.message}`);
+      }
+          
+    } catch (err: any) {
+      console.error("Failed to fetch data:", err);
+      setError(err.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update useEffect to include proper dependencies and cleanup
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const initializeData = async () => {
+      if (!isSubscribed) return;
+      await fetchData();
     };
 
-    fetchData();
-  }, [navigate]);
+    initializeData();
 
-  // Fetch campuses when Add Class modal opens
-  useEffect(() => {
-    if (isAddClassOpen) {
-      fetchCampusList();
-    }
-  }, [isAddClassOpen]);
+    // Cleanup function
+    return () => {
+      isSubscribed = false;
+    };
+  }, []); // Empty dependency array since we only want to fetch once on mount
 
   const fetchCampusList = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://159.65.31.191/api/campus/all', {
+      const response = await axios.get('http://159.65.31.191/api/Tenant/campuses', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'accept': 'text/plain'
@@ -125,7 +184,10 @@ const ClassManagement: React.FC = () => {
       if (response.data.statusCode === 200) {
         setCampusList(response.data.data || []);
         if (response.data.data?.length > 0) {
-          setNewClassCampusId(response.data.data[0].campusId);
+          setFormData(prev => ({
+            ...prev,
+            campusId: response.data.data[0].id
+          }));
         }
       } else {
         setAddClassError('Failed to fetch campuses');
@@ -143,29 +205,18 @@ const ClassManagement: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.post('http://159.65.31.191/api/Class/create', 
-        {
-          className: newClassName,
-          campusId: newClassCampusId
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'accept': 'text/plain'
-          }
+      const response = await axios.post('http://159.65.31.191/api/Tenant/setup/class', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'accept': 'text/plain'
         }
-      );
+      });
 
       if (response.data.statusCode === 201) {
         setAddClassSuccess(true);
-        setNewClassName("");
-        
-        // Refetch classes after adding a new one
-        setTimeout(() => {
-          handleClassAdded();
-          closeAddClassModal();
-        }, 1500);
+        setFormData({ name: "", campusId: "", arms: [{ name: "", description: "" }] });
+        closeAddClassModal();
+        fetchData();
       } else {
         setAddClassError(response.data.message || 'Failed to create class');
       }
@@ -176,9 +227,44 @@ const ClassManagement: React.FC = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleArmChange = (index: number, field: keyof ArmInput, value: string) => {
+    setFormData(prev => {
+      const newArms = [...prev.arms];
+      newArms[index] = {
+        ...newArms[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        arms: newArms
+      };
+    });
+  };
+
+  const addArm = () => {
+    setFormData(prev => ({
+      ...prev,
+      arms: [...prev.arms, { name: "", description: "" }]
+    }));
+  };
+
+  const removeArm = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      arms: prev.arms.filter((_, i) => i !== index)
+    }));
+  };
+
   const closeAddClassModal = () => {
     setIsAddClassOpen(false);
-    setNewClassName("");
     setAddClassError(null);
     setAddClassSuccess(false);
     setFormTab("basic");
@@ -186,43 +272,12 @@ const ClassManagement: React.FC = () => {
 
   const handleAddClass = () => {
     setIsAddClassOpen(true);
+    fetchCampusList(); // Fetch campus list when opening modal
   };
 
   const handleAddArm = (classItem: Class) => {
     setSelectedClass(classItem);
     setShowAddArmForm(true);
-  };
-
-  const handleClassAdded = () => {
-    // Refetch classes after adding a new class
-    setLoading(true);
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        
-        // Fetch classes with arms
-        const classesResponse = await axios.get('http://159.65.31.191/api/Class/all-with-arms', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'text/plain'
-          }
-        });
-
-        if (classesResponse.data.statusCode === 200) {
-          setClasses(classesResponse.data.data || []);
-        } else {
-          setError(`Error fetching classes: ${classesResponse.data.message}`);
-        }
-          
-      } catch (err: any) {
-        console.error("Failed to fetch data:", err);
-        setError(err.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
   };
 
   const handleViewClassDetails = (classId: string) => {
@@ -236,7 +291,54 @@ const ClassManagement: React.FC = () => {
     return matchesSearch && matchesCampus;
   });
 
-  // Show centered spinner when loading
+  // Add this function to handle teacher invitation
+  const handleInviteTeacher = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteLoading(true);
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.post(
+        'http://159.65.31.191/api/TeacherInvitation/invite',
+        inviteForm,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'accept': '/'
+          }
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('Teacher invitation sent successfully!');
+        setShowInviteModal(false);
+        setInviteForm({
+          email: '',
+          classId: '',
+          armId: '',
+          campusId: ''
+        });
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to send invitation');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  // Add this function to open invite modal
+  const openInviteModal = (classItem: Class) => {
+    setSelectedClassForInvite(classItem);
+    setInviteForm(prev => ({
+      ...prev,
+      classId: classItem.classId,
+      campusId: classItem.campusId
+    }));
+    setShowInviteModal(true);
+  };
+
+  // Show loading state only when loading is true
   if (loading) {
     return (
       <AdminLayout title="Class Management">
@@ -247,18 +349,330 @@ const ClassManagement: React.FC = () => {
     );
   }
 
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <AdminLayout title="Class Management">
+        <div className="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-lg">
+          {error}
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const classForm = (
+    <div className={`fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center ${isAddClassOpen ? 'block' : 'hidden'}`}>
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl p-4 w-full max-w-xl border border-gray-700">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-bold text-white flex items-center">
+            <svg className="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add New Class
+          </h2>
+          <button 
+            onClick={closeAddClassModal}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {addClassError && (
+          <div className="mb-3 p-2 bg-red-500/10 border border-red-500 rounded-lg text-red-500 text-sm">
+            {addClassError}
+          </div>
+        )}
+
+        <form onSubmit={handleCreateClass} className="space-y-4">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Class Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="e.g. Class 5"
+                className="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Campus <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="campusId"
+                value={formData.campusId}
+                onChange={handleInputChange}
+                className="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                required
+              >
+                <option value="">Select Campus</option>
+                {campusList.map(campus => (
+                  <option key={campus.id} value={campus.id}>
+                    {campus.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-300">
+                  Arms
+                </label>
+                <button
+                  type="button"
+                  onClick={addArm}
+                  className="text-yellow-500 hover:text-yellow-400 text-xs flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Arm
+                </button>
+              </div>
+
+              {formData.arms.map((arm, index) => (
+                <div key={index} className="bg-gray-800 p-3 rounded-lg space-y-2">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-medium text-white">Arm {index + 1}</h4>
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => removeArm(index)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={arm.name}
+                        onChange={(e) => handleArmChange(index, 'name', e.target.value)}
+                        placeholder="e.g. A"
+                        className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-xs"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Description
+                      </label>
+                      <input
+                        type="text"
+                        value={arm.description}
+                        onChange={(e) => handleArmChange(index, 'description', e.target.value)}
+                        placeholder="Optional description"
+                        className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-3 border-t border-gray-700">
+            <button
+              type="button"
+              onClick={closeAddClassModal}
+              className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={addClassLoading}
+              className={`px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black rounded-lg hover:from-yellow-400 hover:to-yellow-500 transition-colors flex items-center text-sm ${
+                addClassLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {addClassLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Creating...
+                </>
+              ) : (
+                'Create Class'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  // Update the invite teacher modal component
+  const inviteTeacherModal = (
+    <div className={`fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center ${showInviteModal ? 'block' : 'hidden'}`}>
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-gray-700">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-bold text-white flex items-center">
+            <svg className="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            Invite Teacher
+          </h2>
+          <button 
+            onClick={() => setShowInviteModal(false)}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Form Data Display */}
+        <div className="bg-gray-700/50 rounded-lg p-4 mb-6 font-mono text-sm">
+          <pre className="text-gray-300 overflow-x-auto">
+{`{
+  "email": "${inviteForm.email || 'user@example.com'}",
+  "classId": "${inviteForm.classId || '3fa85f64-5717-4562-b3fc-2c963f66afa6'}",
+  "armId": "${inviteForm.armId || '3fa85f64-5717-4562-b3fc-2c963f66afa6'}",
+  "campusId": "${inviteForm.campusId || '3fa85f64-5717-4562-b3fc-2c963f66afa6'}"
+}`}
+          </pre>
+        </div>
+
+        <form onSubmit={handleInviteTeacher} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Email Address <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={inviteForm.email}
+              onChange={(e) => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
+              placeholder="user@example.com"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Class <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={selectedClassForInvite?.className || ''}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+              disabled
+            />
+            <input 
+              type="hidden" 
+              value={inviteForm.classId} 
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Arm <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={inviteForm.armId}
+              onChange={(e) => setInviteForm(prev => ({ ...prev, armId: e.target.value }))}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              required
+            >
+              <option value="">Select an arm</option>
+              {selectedClassForInvite?.arms.map(arm => (
+                <option key={arm.armId} value={arm.armId}>
+                  {arm.armName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Campus ID
+            </label>
+            <input
+              type="text"
+              value={inviteForm.campusId}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+              disabled
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-700">
+            <button
+              type="button"
+              onClick={() => setShowInviteModal(false)}
+              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={inviteLoading}
+              className={`px-6 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black rounded-lg hover:from-yellow-400 hover:to-yellow-500 transition-colors flex items-center ${
+                inviteLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {inviteLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Sending...
+                </>
+              ) : (
+                'Send Invitation'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   return (
     <AdminLayout title="Class Management">
       <div className="w-full space-y-6">
         {/* Class Summary Stats */}
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mr-3">
-              <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-white">Class Overview</h2>
             </div>
-            <h2 className="text-xl font-bold text-white">Class Overview</h2>
+            <button 
+              onClick={handleAddClass}
+              className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-2 px-4 rounded hover:from-yellow-400 hover:to-yellow-500 transition-all duration-200 flex items-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add New Class
+            </button>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -338,12 +752,12 @@ const ClassManagement: React.FC = () => {
               
               <button 
                 onClick={handleAddClass}
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-2 px-4 rounded-lg hover:from-yellow-400 hover:to-yellow-500 transition-all duration-200 flex items-center"
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-2 px-4 rounded hover:from-yellow-400 hover:to-yellow-500 transition-all duration-200 flex items-center"
               >
-                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Add Class
+                Add New Class
               </button>
             </div>
           </div>
@@ -398,214 +812,89 @@ const ClassManagement: React.FC = () => {
             {error}
           </div>
         ) : (
-          <div className={`${viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}`}>
-            {filteredClasses.length > 0 ? (
-              viewMode === "grid" ? (
-                filteredClasses.map((classItem) => (
-                  <div 
-                    key={classItem.classId} 
-                    className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-yellow-500 transition-all duration-200 shadow-lg group"
-                  >
-                    <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 group-hover:bg-gradient-to-r group-hover:from-gray-800 group-hover:to-gray-900 transition-all duration-300">
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-xl font-bold text-white flex items-center">
-                          <svg className="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                          </svg>
-                          {classItem.className}
-                        </h3>
-                        <div className="bg-yellow-500 text-black text-xs font-semibold py-0.5 px-2 rounded-full">
-                          {classItem.campusName}
-                        </div>
-                      </div>
-                      <div className="mt-1 flex items-center">
-                        <span className="text-xs text-gray-400">Performance:</span>
-                        <div className="ml-2 w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-yellow-500 to-yellow-600"
-                            style={{ width: `${Math.floor(Math.random() * 30) + 60}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4">
-                      <div className="mb-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="text-sm font-semibold text-white flex items-center">
-                            <svg className="w-4 h-4 mr-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2M7 7h10" />
+          <>
+            {/* Horizontal Scrollable Classes */}
+            <div className="relative">
+              <div className="overflow-x-auto pb-4 hide-scrollbar">
+                <div className="flex justify-between w-full px-1 min-w-full">
+                  {filteredClasses.slice(0, 3).map((classItem) => (
+                    <div 
+                      key={classItem.classId} 
+                      className="w-[32%] bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-yellow-500 transition-all duration-200 shadow-lg group"
+                    >
+                      <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-4 group-hover:bg-gradient-to-r group-hover:from-gray-800 group-hover:to-gray-900 transition-all duration-300">
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-xl font-bold text-white flex items-center">
+                            <svg className="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
-                            Arms ({classItem.arms.length})
-                          </h4>
+                            {classItem.className}
+                          </h3>
+                          <div className="bg-yellow-500 text-black text-xs font-semibold py-0.5 px-2 rounded-full">
+                            {classItem.campusName}
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Performance</span>
+                            <span className="text-yellow-500">Good</span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-yellow-500 to-yellow-600 w-[75%]"></div>
+                          </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          <div className="bg-gray-700/50 rounded-lg p-2 text-center">
+                            <div className="text-lg font-semibold text-white">{classItem.studentCount || 0}</div>
+                            <div className="text-xs text-gray-400">Students</div>
+                          </div>
+                          <div className="bg-gray-700/50 rounded-lg p-2 text-center">
+                            <div className="text-lg font-semibold text-white">{classItem.teacherCount || 0}</div>
+                            <div className="text-xs text-gray-400">Teachers</div>
+                          </div>
+                        </div>
+
+                        {/* Add Invite Teacher Button */}
+                        <div className="mt-4 flex justify-center">
                           <button 
-                            onClick={() => handleAddArm(classItem)}
-                            className="text-xs text-yellow-500 hover:text-yellow-400 transition-colors duration-200 flex items-center"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigate('/admin/invite-teacher');
+                            }}
+                            className="w-full py-2 px-3 bg-gray-700/50 hover:bg-gray-700 text-yellow-500 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm"
                           >
-                            <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                             </svg>
-                            Add
+                            <span>Invite Teacher</span>
                           </button>
                         </div>
-                        
-                        {classItem.arms.length > 0 ? (
-                          <div className="grid grid-cols-3 gap-2">
-                            {classItem.arms.map(arm => (
-                              <div key={arm.armId} className="bg-gray-700 rounded-lg p-2 text-xs text-center text-white">
-                                {arm.armName}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="py-2 text-center border border-dashed border-gray-700 rounded-lg">
-                            <p className="text-gray-500 text-xs">No arms available</p>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gray-700 rounded-lg p-3 text-center">
-                          <div className="flex items-center justify-center">
-                            <svg className="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <p className="text-xl font-bold text-white">{classItem.studentCount || 0}</p>
-                          </div>
-                          <p className="text-xs text-gray-400">Students</p>
-                        </div>
-                        <div className="bg-gray-700 rounded-lg p-3 text-center">
-                          <div className="flex items-center justify-center">
-                            <svg className="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <p className="text-xl font-bold text-white">{classItem.teacherCount || 0}</p>
-                          </div>
-                          <p className="text-xs text-gray-400">Teachers</p>
-                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex border-t border-gray-700">
-                      <button className="flex-1 p-3 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors duration-200 text-sm flex items-center justify-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                        Edit Class
-                      </button>
-                      <div className="border-l border-gray-700"></div>
-                      <button 
-                        onClick={() => handleViewClassDetails(classItem.classId)}
-                        className="flex-1 p-3 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors duration-200 text-sm flex items-center justify-center"
-                      >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                // List view
-                filteredClasses.map((classItem) => (
-                  <div 
-                    key={classItem.classId} 
-                    className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-yellow-500 transition-all duration-200 shadow-lg"
-                  >
-                    <div className="p-4">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div className="flex items-center mb-2 md:mb-0">
-                          <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mr-3">
-                            <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-white">{classItem.className}</h3>
-                            <p className="text-sm text-gray-400">Campus: {classItem.campusName}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4">
-                          <div className="text-center">
-                            <p className="text-lg font-semibold text-white">{classItem.studentCount || 0}</p>
-                            <p className="text-xs text-gray-400">Students</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-lg font-semibold text-white">{classItem.teacherCount || 0}</p>
-                            <p className="text-xs text-gray-400">Teachers</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-lg font-semibold text-white">{classItem.arms.length}</p>
-                            <p className="text-xs text-gray-400">Arms</p>
-                          </div>
-                          
-                          <div className="flex space-x-2">
-                            <button className="p-2 bg-gray-700 rounded-lg text-yellow-500 hover:bg-gray-600 transition-colors">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                            <button 
-                              onClick={() => handleViewClassDetails(classItem.classId)}
-                              className="p-2 bg-gray-700 rounded-lg text-yellow-500 hover:bg-gray-600 transition-colors"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                            <button 
-                              onClick={() => handleAddArm(classItem)}
-                              className="p-2 bg-gray-700 rounded-lg text-yellow-500 hover:bg-gray-600 transition-colors"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {classItem.arms.length > 0 && (
-                        <div className="mt-3 pl-12">
-                          <div className="text-sm text-gray-400 mb-1">Arms:</div>
-                          <div className="flex flex-wrap gap-2">
-                            {classItem.arms.map(arm => (
-                              <div key={arm.armId} className="bg-gray-700 text-white text-xs py-1 px-2 rounded">
-                                {arm.armName}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )
-            ) : (
-              <div className="col-span-1 md:col-span-2 xl:col-span-3 bg-gray-800 rounded-lg p-8 flex flex-col items-center">
-                <svg className="w-24 h-24 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                <p className="text-gray-300 text-xl mb-3 font-bold">
-                  No classes available
-                </p>
-                <p className="text-gray-400 mb-6 text-center max-w-md">
-                  Add your first class to start organizing students and teachers
-                </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* View All Classes Button */}
+            {filteredClasses.length > 3 && (
+              <div className="flex justify-center mt-6">
                 <button 
-                  onClick={handleAddClass}
-                  className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-3 px-8 rounded-lg hover:from-yellow-400 hover:to-yellow-500 transition-all duration-200"
+                  onClick={() => setViewMode("list")}
+                  className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold py-2 px-6 rounded-lg hover:from-yellow-400 hover:to-yellow-500 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  Add Your First Class
+                  <span>View All Classes</span>
+                  <span className="bg-yellow-600/30 rounded-full px-2 py-0.5 text-sm">
+                    {filteredClasses.length}
+                  </span>
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
       
@@ -614,187 +903,30 @@ const ClassManagement: React.FC = () => {
         <AddArmModal
           isOpen={showAddArmForm}
           onClose={() => setShowAddArmForm(false)}
-          onArmAdded={handleClassAdded}
+          onArmAdded={fetchData}
           classId={selectedClass.classId}
           className={selectedClass.className}
         />
       )}
 
       {/* Integrated Add Class Modal */}
-      {isAddClassOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="relative w-full max-w-md mx-auto">
-            {/* Close button */}
-            <button 
-              onClick={closeAddClassModal}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            {/* Modal content */}
-            <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden transform transition-all">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-yellow-600 to-yellow-500 p-4">
-                <h3 className="text-lg font-bold text-black">Add New Class</h3>
-                <p className="text-sm text-gray-800">Create a new class in your school</p>
-              </div>
-              
-              {/* Form tabs */}
-              <div className="flex border-b border-gray-700">
-                <button
-                  type="button"
-                  className={`flex-1 py-3 font-medium ${
-                    formTab === "basic" 
-                      ? "text-yellow-500 border-b-2 border-yellow-500" 
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                  onClick={() => setFormTab("basic")}
-                >
-                  Basic Info
-                </button>
-                <button
-                  type="button"
-                  className={`flex-1 py-3 font-medium ${
-                    formTab === "advanced" 
-                      ? "text-yellow-500 border-b-2 border-yellow-500" 
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                  onClick={() => setFormTab("advanced")}
-                >
-                  Advanced Options
-                </button>
-              </div>
-              
-              <form onSubmit={handleCreateClass} className="p-6">
-                {formTab === "basic" ? (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Class Name*
-                      </label>
-                      <input
-                        type="text"
-                        value={newClassName}
-                        onChange={(e) => setNewClassName(e.target.value)}
-                        placeholder="e.g. Primary 1, JSS 1, SS 2"
-                        required
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-yellow-500 focus:border-yellow-500"
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Campus*
-                      </label>
-                      <select
-                        value={newClassCampusId}
-                        onChange={(e) => setNewClassCampusId(e.target.value)}
-                        required
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-yellow-500 focus:border-yellow-500"
-                      >
-                        {campusList.length === 0 && (
-                          <option value="">No campuses available</option>
-                        )}
-                        {campusList.map(campus => (
-                          <option key={campus.campusId} value={campus.campusId}>
-                            {campus.campusName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Class Capacity
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="Maximum number of students"
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-yellow-500 focus:border-yellow-500"
-                      />
-                      <p className="mt-1 text-xs text-gray-400">
-                        Optional: Set a maximum capacity for this class
-                      </p>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Class Description
-                      </label>
-                      <textarea
-                        placeholder="Add additional information about this class"
-                        rows={3}
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-yellow-500 focus:border-yellow-500"
-                      ></textarea>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-300 mb-1 flex items-center">
-                        <input
-                          type="checkbox"
-                          className="rounded text-yellow-500 focus:ring-yellow-500 mr-2"
-                        />
-                        <span>Enable automatic student placement</span>
-                      </label>
-                      <p className="ml-6 text-xs text-gray-400">
-                        Allow the system to automatically place students in arms based on capacity
-                      </p>
-                    </div>
-                  </>
-                )}
-                
-                {/* Status messages */}
-                {addClassError && (
-                  <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
-                    {addClassError}
-                  </div>
-                )}
-                
-                {addClassSuccess && (
-                  <div className="mb-4 p-3 bg-green-900/50 border border-green-700 rounded-lg text-green-200 text-sm">
-                    Class created successfully!
-                  </div>
-                )}
-                
-                {/* Form actions */}
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={closeAddClassModal}
-                    className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={addClassLoading || !newClassName || !newClassCampusId}
-                    className={`px-4 py-2 rounded-lg font-medium flex items-center ${
-                      addClassLoading || !newClassName || !newClassCampusId
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-yellow-600 to-yellow-500 text-black hover:from-yellow-500 hover:to-yellow-400"
-                    }`}
-                  >
-                    {addClassLoading ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Creating...
-                      </>
-                    ) : "Create Class"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      {classForm}
+
+      {/* Add the invite modal */}
+      {inviteTeacherModal}
+
+      {/* Add this CSS to your global styles or in a style tag */}
+      <style>
+        {`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        `}
+      </style>
     </AdminLayout>
   );
 };

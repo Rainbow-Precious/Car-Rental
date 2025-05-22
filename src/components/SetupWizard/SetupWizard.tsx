@@ -6,6 +6,7 @@ import ArmSetup from './ArmSetup';
 import SetupComplete from './SetupComplete';
 import { apiService } from '../../utils/api';
 import { showError, showInfo, showLoading, dismissToast } from '../../utils/toast';
+import Spinner from '../common/Spinner';
 
 // Setup stages from API
 export enum SetupStage {
@@ -268,10 +269,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ initialStage = SetupStage.Cam
           }, 100);
           return (
             <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-                <p className="text-gray-300">Campus already set up. Proceeding to next step...</p>
-              </div>
+              <Spinner size="lg" text="Campus already set up. Proceeding to next step..." />
             </div>
           );
         }
@@ -286,10 +284,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ initialStage = SetupStage.Cam
           }, 100);
           return (
             <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-                <p className="text-gray-300">Class already set up. Proceeding to next step...</p>
-              </div>
+              <Spinner size="lg" text="Class already set up. Proceeding to next step..." />
             </div>
           );
         }
