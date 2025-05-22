@@ -21,6 +21,8 @@ import ClassDetail from "../components/AdminDashboard/ClassManagement/ClassDetai
 import Settings from "../components/AdminDashboard/Settings";
 import SetupWizard from "../components/SetupWizard/SetupWizard";
 import AuthCheck from "../utils/AuthCheck";
+import InviteTeachers from "../components/AdminDashboard/InviteTeachers";
+import PendingInvites from "../components/AdminDashboard/PendingInvites";
 
 // Public routes that anyone can access
 export const routes: RouteObject[] = [
@@ -79,6 +81,14 @@ export const routes: RouteObject[] = [
   {
     path: "/admin/teachers",
     element: <AuthCheck><TeacherManagement /></AuthCheck>,
+  },
+  {
+    path: "/admin/invite-teacher",
+    element: <AuthCheck><InviteTeachers /></AuthCheck>,
+  },
+  {
+    path: "/admin/pending-invites",
+    element: <AuthCheck><PendingInvites /></AuthCheck>,
   },
   {
     path: "/admin/exams",

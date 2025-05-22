@@ -1,32 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from './Layout/AdminLayout';
-import Spinner from '../common/Spinner';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('account');
-  const [loading, setLoading] = useState(true);
 
-  // Simple authentication check and data loading simulation
+  // Simple authentication check
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
       navigate('/signin');
-      return;
     }
-
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500); // 1.5 seconds to simulate data loading
-
-    return () => clearTimeout(timer);
   }, [navigate]);
-
-  if (loading) {
-    return <Spinner fullScreen size="lg" text="Loading settings..." />;
-  }
   
   return (
     <AdminLayout title="Settings" showBackButton={true}>
