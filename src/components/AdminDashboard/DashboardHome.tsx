@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Spinner from "../common/Spinner";
 
 // Mock user data for the navbar
 const mockUser = {
@@ -238,14 +239,27 @@ const TopNav: React.FC = () => {
 
 const DashboardHome: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
-  // Simple authentication check
+  // Simple authentication check and data loading simulation
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
       navigate('/signin');
+      return;
     }
+
+    // Simulate loading data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 seconds to simulate data loading
+
+    return () => clearTimeout(timer);
   }, [navigate]);
+
+  if (loading) {
+    return <Spinner fullScreen size="lg" text="Loading your dashboard..." />;
+  }
 
   return (
     <>

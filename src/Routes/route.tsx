@@ -17,6 +17,7 @@ import TeacherManagement from "../components/AdminDashboard/TeacherManagement";
 import ExamManagement from "../components/AdminDashboard/ExamManagement";
 import CampusManagement from "../components/AdminDashboard/CampusManagement";
 import ClassManagement from "../components/AdminDashboard/ClassManagement";
+import ClassDetail from "../components/AdminDashboard/ClassManagement/ClassDetail";
 import Settings from "../components/AdminDashboard/Settings";
 import SetupWizard from "../components/SetupWizard/SetupWizard";
 import AuthCheck from "../utils/AuthCheck";
@@ -92,6 +93,10 @@ export const routes: RouteObject[] = [
     element: <AuthCheck><ClassManagement /></AuthCheck>,
   },
   {
+    path: "/admin/classes/:classId",
+    element: <AuthCheck><ClassDetail /></AuthCheck>,
+  },
+  {
     path: "/admin/settings",
     element: <AuthCheck><Settings /></AuthCheck>,
   },
@@ -108,6 +113,14 @@ export const routes: RouteObject[] = [
   {
     path: "/admin/exammanagement",
     element: <Navigate to="/admin/exams" replace />,
+  },
+  {
+    path: "/admin/class-management",
+    element: <Navigate to="/admin/classes" replace />,
+  },
+  {
+    path: "/admin/class-management/:classId",
+    element: <Navigate to="/admin/classes/:classId" replace />,
   },
   
   // Catch-all route

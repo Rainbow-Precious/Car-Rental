@@ -1,6 +1,6 @@
 // src/App.tsx
 import { useRoutes } from "react-router-dom";
-import { routes } from "../src/Routes/route"; // adjust path if necessary
+import { routes } from "../src/Routes/route";
 import { Toaster } from '../src/utils/toast';
 import DevResetHelper from "./components/HomePage/Login/DevResetHelper";
 

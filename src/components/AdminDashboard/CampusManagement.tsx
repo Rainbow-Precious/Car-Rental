@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AdminLayout from "./Layout/AdminLayout";
+import Spinner from "../common/Spinner";
 
 interface Campus {
   id: string;
@@ -69,6 +70,14 @@ const CampusManagement: React.FC = () => {
     setShowAddForm(true);
   };
 
+  if (loading) {
+    return (
+      <AdminLayout title="Campus Management">
+        <Spinner size="lg" text="Loading campuses..." />
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout title="Campus Management">
       <div className="w-full space-y-6">
@@ -81,11 +90,7 @@ const CampusManagement: React.FC = () => {
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-500 text-white p-4 rounded-lg">
             {error}
           </div>
