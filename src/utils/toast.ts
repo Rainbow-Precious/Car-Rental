@@ -24,6 +24,17 @@ export const showError = (message: string) => {
   // Clear any existing toasts to make sure error is seen
   toast.dismiss();
   
+  // Also update the error message element if it exists in the DOM
+  const errorMessageElement = document.getElementById('login-error-message');
+  if (errorMessageElement) {
+    errorMessageElement.textContent = message;
+    
+    // Clear the message after 8 seconds to match toast duration
+    setTimeout(() => {
+      errorMessageElement.textContent = '';
+    }, 8000);
+  }
+  
   // Make sure the message is displayed prominently
   return toast.error(message, {
     duration: 8000, // Longer duration for errors
@@ -36,6 +47,9 @@ export const showError = (message: string) => {
       fontSize: '16px',
       fontWeight: 'bold',
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+      maxWidth: '400px',
+      width: '90%',
+      textAlign: 'center',
     },
   });
 };
