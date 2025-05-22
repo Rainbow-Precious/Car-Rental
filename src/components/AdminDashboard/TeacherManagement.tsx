@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { createPortal } from "react-dom";
+import AdminLayout from "./Layout/AdminLayout";
 
 // Define Teacher interface
 interface Teacher {
@@ -673,7 +674,7 @@ const TeacherManagement: React.FC = () => {
   };
 
   // Success confirmation modal
-  const successModal = (
+  const renderSuccessModal = () => (
     <div className={`fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center ${showSuccessModal ? 'block' : 'hidden'}`}>
       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-gray-700 relative overflow-hidden">
         {/* Confetti elements */}
@@ -781,115 +782,124 @@ const TeacherManagement: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen w-screen bg-black flex flex-col">
-      <main className="flex-1 py-8 px-6">
-        <div className="w-full space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">Teacher Management</h1>
-            {teachers.length > 0 && (
-              <div className="space-x-3">
-                <button 
-                  onClick={handleAddTeacher}
-                  className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400"
-                >
-                  Add Teacher
-                </button>
-                <button className="bg-gray-700 text-white font-semibold py-2 px-4 rounded hover:bg-gray-600">
-                  Invite Teacher
-                </button>
-              </div>
-            )}
+    <AdminLayout title="Teacher Management">
+      <div className="w-full space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="space-x-3">
+            <button 
+              onClick={handleAddTeacher}
+              className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400"
+            >
+              Add Teacher
+            </button>
+            <a
+              href="/templates/teachers-template.csv"
+              download
+              className="bg-gray-700 text-white font-semibold py-2 px-4 rounded hover:bg-gray-600"
+            >
+              Download CSV Template
+            </a>
           </div>
+        </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-white text-xl">Loading...</div>
-            </div>
-          ) : error ? (
-            <div className="bg-red-500 text-white p-4 rounded-lg">
-              {error}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full bg-gray-800 rounded-lg">
-                {tableHeaders}
-                <tbody>
-                  {teachers.length > 0 ? (
-                    teachers.map((teacher) => (
-                      <tr key={teacher.id} id={`teacher-${teacher.id}`} className="border-t border-gray-700">
-                        <td className="p-3 text-white">{`${teacher.firstName} ${teacher.lastName}`}</td>
-                        <td className="p-3 text-white">{teacher.email}</td>
-                        <td className="p-3 text-white">{teacher.gender}</td>
-                        <td className="p-3 text-white">{teacher.phoneNumber}</td>
-                        <td className="p-3 text-white">
-                          {`${classes.find((c) => c.classId === teacher.classId)?.className || "N/A"} / 
-                          ${arms.find((a) => a.armId === teacher.armId)?.armName || "N/A"}`}
-                        </td>
-                        <td className="p-3 text-white">
-                          {teacher.campusName || campuses.find((c) => c.id === teacher.campusId)?.name || "N/A"}
-                        </td>
-                        <td className="p-3 relative">
-                          <div className="flex justify-center action-dropdown-container">
-                            <button 
-                              ref={(el) => { actionButtonRefs.current[teacher.id] = el; }}
-                              onClick={() => handleOpenDropdown(teacher.id)}
-                              className="text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-full p-2 transition-all duration-200 action-button"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="p-0">
-                        <div className="empty-state-container flex flex-col items-center justify-center py-16 rounded-b-lg">
-                          <svg 
-                            className="w-20 h-20 text-gray-500 mb-4" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24" 
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth={1.5} 
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
-                            />
-                          </svg>
-                          <p className="text-gray-300 text-xl mb-3 font-bold">
-                            Seems you don't have any teachers yet
-                          </p>
-                          <p className="text-gray-400 mb-8 text-center max-w-md">
-                            Add a teacher to start managing your school's faculty and assign them to classes
-                          </p>
+        {/* Import Form (static) */}
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <h2 className="text-lg font-semibold mb-4 text-white">Import Teachers</h2>
+          <div className="flex space-x-3">
+            <button className="bg-yellow-500 text-black font-semibold py-2 px-4 rounded hover:bg-yellow-400">
+              Import Teachers from CSV
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-white text-xl">Loading...</div>
+          </div>
+        ) : error ? (
+          <div className="bg-red-500 text-white p-4 rounded-lg">
+            {error}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full bg-gray-800 rounded-lg">
+              {tableHeaders}
+              <tbody>
+                {teachers.length > 0 ? (
+                  teachers.map((teacher) => (
+                    <tr key={teacher.id} id={`teacher-${teacher.id}`} className="border-t border-gray-700">
+                      <td className="p-3 text-white">{`${teacher.firstName} ${teacher.lastName}`}</td>
+                      <td className="p-3 text-white">{teacher.email}</td>
+                      <td className="p-3 text-white">{teacher.gender}</td>
+                      <td className="p-3 text-white">{teacher.phoneNumber}</td>
+                      <td className="p-3 text-white">
+                        {`${classes.find((c) => c.classId === teacher.classId)?.className || "N/A"} / 
+                        ${arms.find((a) => a.armId === teacher.armId)?.armName || "N/A"}`}
+                      </td>
+                      <td className="p-3 text-white">
+                        {teacher.campusName || campuses.find((c) => c.id === teacher.campusId)?.name || "N/A"}
+                      </td>
+                      <td className="p-3 relative">
+                        <div className="flex justify-center action-dropdown-container">
                           <button 
-                            onClick={handleAddTeacher}
-                            className="bg-yellow-500 text-black font-semibold py-3 px-8 rounded-lg hover:bg-yellow-400 text-lg btn-pulse"
+                            ref={(el) => { actionButtonRefs.current[teacher.id] = el; }}
+                            onClick={() => handleOpenDropdown(teacher.id)}
+                            className="text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-full p-2 transition-all duration-200 action-button"
                           >
-                            Create Your First Teacher
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                            </svg>
                           </button>
                         </div>
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </main>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="p-0">
+                      <div className="empty-state-container flex flex-col items-center justify-center py-16 rounded-b-lg">
+                        <svg 
+                          className="w-20 h-20 text-gray-500 mb-4" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24" 
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={1.5} 
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+                          />
+                        </svg>
+                        <p className="text-gray-300 text-xl mb-3 font-bold">
+                          Seems you don't have any teachers yet
+                        </p>
+                        <p className="text-gray-400 mb-8 text-center max-w-md">
+                          Add a teacher to start managing your school's faculty and assign them to classes
+                        </p>
+                        <button 
+                          onClick={handleAddTeacher}
+                          className="bg-yellow-500 text-black font-semibold py-3 px-8 rounded-lg hover:bg-yellow-400 text-lg btn-pulse"
+                        >
+                          Create Your First Teacher
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
       {/* Render the teacher form modal */}
       {teacherForm}
+      {/* Render success modal */}
+      {showSuccessModal && renderSuccessModal()}
       {/* Render dropdown portal */}
       {renderDropdownPortal()}
-      {/* Render success modal */}
-      {successModal}
-    </div>
+    </AdminLayout>
   );
 };
 

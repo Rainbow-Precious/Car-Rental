@@ -15,6 +15,8 @@ import DashboardHome from "../components/AdminDashboard/DashboardHome";
 import StudentManagement from "../components/AdminDashboard/StudentManagement";
 import TeacherManagement from "../components/AdminDashboard/TeacherManagement";
 import ExamManagement from "../components/AdminDashboard/ExamManagement";
+import CampusManagement from "../components/AdminDashboard/CampusManagement";
+import ClassManagement from "../components/AdminDashboard/ClassManagement";
 import Settings from "../components/AdminDashboard/Settings";
 import SetupWizard from "../components/SetupWizard/SetupWizard";
 import AuthCheck from "../utils/AuthCheck";
@@ -58,7 +60,7 @@ export const routes: RouteObject[] = [
     element: <ResetPasswordPage />,
   },
   
-  // Protected routes - require authentication
+  // Protected Admin Dashboard routes
   {
     path: "/dashboard",
     element: <AuthCheck><DashboardHome /></AuthCheck>,
@@ -67,21 +69,45 @@ export const routes: RouteObject[] = [
     path: "/setup",
     element: <AuthCheck><SetupWizard /></AuthCheck>,
   },
+  
+  // Admin management routes - grouped logically
   {
-    path: "/admin/studentmanagement",
+    path: "/admin/students",
     element: <AuthCheck><StudentManagement /></AuthCheck>,
   },
   {
-    path: "/admin/teachermanagement",
+    path: "/admin/teachers",
     element: <AuthCheck><TeacherManagement /></AuthCheck>,
   },
   {
-    path: "/admin/exammanagement",
+    path: "/admin/exams",
     element: <AuthCheck><ExamManagement /></AuthCheck>,
+  },
+  {
+    path: "/admin/campuses",
+    element: <AuthCheck><CampusManagement /></AuthCheck>,
+  },
+  {
+    path: "/admin/classes",
+    element: <AuthCheck><ClassManagement /></AuthCheck>,
   },
   {
     path: "/admin/settings",
     element: <AuthCheck><Settings /></AuthCheck>,
+  },
+  
+  // Redirect old routes to new ones for backward compatibility
+  {
+    path: "/admin/studentmanagement",
+    element: <Navigate to="/admin/students" replace />,
+  },
+  {
+    path: "/admin/teachermanagement",
+    element: <Navigate to="/admin/teachers" replace />,
+  },
+  {
+    path: "/admin/exammanagement",
+    element: <Navigate to="/admin/exams" replace />,
   },
   
   // Catch-all route
