@@ -4,7 +4,7 @@ import Footer from "../Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { SetupStage } from "../../SetupWizard/SetupWizard";
 import { apiService } from "../../../utils/api";
-import { showError, showSuccess, showLoading, dismissToast } from "../../../utils/toast";
+import { showError, showSuccess, showLoading, dismissToast, dismissAllToasts } from "../../../utils/toast";
 
 export default function SignInPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -131,15 +131,28 @@ export default function SignInPage() {
       console.error("Login error:", err);
       dismissToast(loadingToastId);
       
+      // Clear any existing toasts to ensure error is visible
+      dismissAllToasts();
+      
       // Handle API error response
       if (err.response) {
         console.log("Error response status:", err.response.status);
         console.log("Error response data:", err.response.data);
         
-        if (err.response.status === 400) {
+        if (err.response.status === 400 || err.response.status === 401) {
           // Extract error message from standardized API response format
-          const errorMessage = err.response.data.message || "Invalid credentials";
+          const errorMessage = err.response.data.message || "Invalid email or password";
           showError(errorMessage);
+          
+          // Add visual indication on the password field
+          const passwordInput = document.getElementById('password') as HTMLInputElement;
+          if (passwordInput) {
+            passwordInput.classList.add('border-red-500');
+            // Remove the red border after a few seconds
+            setTimeout(() => {
+              passwordInput.classList.remove('border-red-500');
+            }, 3000);
+          }
         } else {
           showError(err.response.data.message || "Login failed. Please try again.");
         }
@@ -309,13 +322,16 @@ export default function SignInPage() {
               type="password"
               id="password"
               placeholder="Enter your password"
-              className="w-full bg-black border border-gray-700 px-4 py-2 rounded focus:outline-none focus:border-yellow-500"
+              className="w-full bg-black border border-gray-700 px-4 py-2 rounded focus:outline-none focus:border-yellow-500 transition-colors duration-300"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
             />
           </div>
+          
+          {/* Add an error message display area */}
+          <div id="login-error-message" className="text-red-500 text-sm min-h-[20px]"></div>
           
           <div className="flex justify-end text-sm">
             <Link
