@@ -23,6 +23,11 @@ import SetupWizard from "../components/SetupWizard/SetupWizard";
 import AuthCheck from "../utils/AuthCheck";
 import InviteTeachers from "../components/AdminDashboard/InviteTeachers";
 import PendingInvites from "../components/AdminDashboard/PendingInvites";
+import QuestionBank from "../components/AdminDashboard/QuestionBank/QuestionBank";
+import TeachersDashboard from "../components/TeacherDashboard/TeachersDashboard";
+import AuthHandler from "../components/Auth/AuthHandler";
+import StudentDashboard from "../components/StudentDashboard/StudentDashboard";
+import TeacherTest from "../components/TeacherTest";
 
 // Public routes that anyone can access
 export const routes: RouteObject[] = [
@@ -33,6 +38,10 @@ export const routes: RouteObject[] = [
   {
     path: "/signin",
     element: <SignInPage />,
+  },
+  {
+    path: "/auth",
+    element: <AuthHandler />,
   },
   {
     path: "/signup",
@@ -95,6 +104,10 @@ export const routes: RouteObject[] = [
     element: <AuthCheck><ExamManagement /></AuthCheck>,
   },
   {
+    path: "/admin/questions",
+    element: <AuthCheck><QuestionBank /></AuthCheck>,
+  },
+  {
     path: "/admin/campuses",
     element: <AuthCheck><CampusManagement /></AuthCheck>,
   },
@@ -109,6 +122,30 @@ export const routes: RouteObject[] = [
   {
     path: "/admin/settings",
     element: <AuthCheck><Settings /></AuthCheck>,
+  },
+
+  // Teacher Dashboard routes
+  {
+    path: "/teacher/dashboard",
+    element: <AuthCheck><TeachersDashboard /></AuthCheck>,
+  },
+  {
+    path: "/teacher/questions",
+    element: <AuthCheck><TeachersDashboard /></AuthCheck>,
+  },
+  
+  // Student Dashboard routes
+  {
+    path: "/student/dashboard",
+    element: <AuthCheck><StudentDashboard /></AuthCheck>,
+  },
+  {
+    path: "/student/exams",
+    element: <AuthCheck><StudentDashboard /></AuthCheck>,
+  },
+  {
+    path: "/student/results",
+    element: <AuthCheck><StudentDashboard /></AuthCheck>,
   },
   
   // Redirect old routes to new ones for backward compatibility
@@ -131,6 +168,12 @@ export const routes: RouteObject[] = [
   {
     path: "/admin/class-management/:classId",
     element: <Navigate to="/admin/classes/:classId" replace />,
+  },
+  
+  // Teacher Test route
+  {
+    path: "/teacher-test",
+    element: <TeacherTest />,
   },
   
   // Catch-all route

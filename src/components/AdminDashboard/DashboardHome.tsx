@@ -90,6 +90,9 @@ const systemHealth = {
   lastSync: "2025-05-19 04:21 PM WAT",
 };
 
+// Near the top of the file, with other constants
+const studentImageBase64 = "data:image/jpeg;base64,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";
+
 interface Usage {
   students: { current: number; limit: number };
   teachers: { current: number; limit: number };
@@ -273,7 +276,7 @@ const DashboardHome: React.FC = () => {
             {/* School Overview and Exam Schedule Combined Horizontally */}
             <div className="bg-gray-800 p-6 rounded-lg flex flex-col md:flex-row md:space-x-6">
               {/* School Overview */}
-              <div className="flex-1">
+              <div className="flex-1 relative overflow-hidden">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center">
                     <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,29 +286,41 @@ const DashboardHome: React.FC = () => {
                   <h2 className="text-xl font-bold text-white">School Overview</h2>
                 </div>
                 
-                <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-yellow-500 mb-4 transform transition-all duration-300 hover:scale-102 hover:shadow-lg">
-                  <div className="flex items-center mb-3">
-                    <span className="text-gray-400 text-sm">School</span>
-                    <div className="flex-grow mx-2 border-b border-dashed border-gray-700"></div>
-                    <span className="text-white font-semibold">Demo School</span>
+                <div className="relative">
+                  {/* Background image container */}
+                  <div className="absolute right-0 top-0 h-full w-1/2 overflow-hidden rounded-r-lg">
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-transparent z-10"></div>
+                    <img 
+                      src={studentImageBase64}
+                      alt="Student studying" 
+                      className="absolute right-0 top-0 h-full w-full object-cover object-center opacity-70"
+                    />
                   </div>
                   
-                  <div className="flex items-center mb-3">
-                    <span className="text-gray-400 text-sm">Subscription</span>
-                    <div className="flex-grow mx-2 border-b border-dashed border-gray-700"></div>
-                    <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black text-xs font-bold py-1 px-2 rounded">
-                      Trial
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <span className="text-gray-400 text-sm">Trial Days Left</span>
-                    <div className="flex-grow mx-2 border-b border-dashed border-gray-700"></div>
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center">
-                        <span className="text-white font-bold">12</span>
+                  <div className="bg-gray-900 rounded-lg p-4 border-l-4 border-yellow-500 mb-4 transform transition-all duration-300 hover:scale-102 hover:shadow-lg relative z-20">
+                    <div className="flex items-center mb-3">
+                      <span className="text-gray-400 text-sm">School</span>
+                      <div className="flex-grow mx-2 border-b border-dashed border-gray-700"></div>
+                      <span className="text-white font-semibold">Demo School</span>
+                    </div>
+                    
+                    <div className="flex items-center mb-3">
+                      <span className="text-gray-400 text-sm">Subscription</span>
+                      <div className="flex-grow mx-2 border-b border-dashed border-gray-700"></div>
+                      <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black text-xs font-bold py-1 px-2 rounded">
+                        Trial
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <span className="text-gray-400 text-sm">Trial Days Left</span>
+                      <div className="flex-grow mx-2 border-b border-dashed border-gray-700"></div>
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center">
+                          <span className="text-white font-bold">12</span>
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full"></div>
                       </div>
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full"></div>
                     </div>
                   </div>
                 </div>
