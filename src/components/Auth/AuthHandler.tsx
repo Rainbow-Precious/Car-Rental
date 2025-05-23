@@ -26,8 +26,11 @@ const AuthHandler: React.FC = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Check for userData in localStorage or from API response
-    const storedUser = localStorage.getItem('userData');
+    // Check for userData in localStorage (try both keys for compatibility)
+    const storedUserInfo = localStorage.getItem('userInfo');
+    const storedUserData = localStorage.getItem('userData');
+    
+    const storedUser = storedUserInfo || storedUserData;
     
     if (storedUser) {
       try {
@@ -37,10 +40,17 @@ const AuthHandler: React.FC = () => {
         // Ensure token is stored as authToken for API calls
         if (parsedUserData.token) {
           localStorage.setItem('authToken', parsedUserData.token);
+        } else {
+          // If token is not in userInfo, try to get it from authToken storage
+          const authToken = localStorage.getItem('authToken');
+          if (authToken) {
+            setUserData({ ...parsedUserData, token: authToken });
+          }
         }
       } catch (error) {
         console.error('Failed to parse user data:', error);
         // Clear invalid data
+        localStorage.removeItem('userInfo');
         localStorage.removeItem('userData');
         navigate('/signin');
       }
@@ -54,8 +64,8 @@ const AuthHandler: React.FC = () => {
           const parsedLoginData = JSON.parse(decodeURIComponent(loginData)) as { data: UserData };
           const newUserData = parsedLoginData.data;
           
-          // Save user data to localStorage
-          localStorage.setItem('userData', JSON.stringify(newUserData));
+          // Save user data to localStorage with the correct key
+          localStorage.setItem('userInfo', JSON.stringify(newUserData));
           
           // Ensure token is stored as authToken for API calls
           if (newUserData.token) {

@@ -57,7 +57,8 @@ export default function SignInPage() {
             schoolName: userData.schoolName,
             email: userData.email,
             isVerified: userData.isVerified,
-            isEmailConfirmed: userData.isEmailConfirmed
+            isEmailConfirmed: userData.isEmailConfirmed,
+            mustChangePassword: userData.mustChangePassword
           }));
         }
 
@@ -91,6 +92,37 @@ export default function SignInPage() {
       if (err.response) {
         console.log("Error response status:", err.response.status);
         console.log("Error response data:", err.response.data);
+        
+        // Special handling for 401 responses that contain user data with mustChangePassword
+        if (err.response.status === 401 && err.response.data.data && err.response.data.data.mustChangePassword) {
+          console.log("Teacher must change password on first login");
+          
+          const userData = err.response.data.data;
+          
+          // Save auth token and user data even though it's a 401
+          if (userData.token) {
+            localStorage.setItem('authToken', userData.token);
+            
+            // Save user information for password change flow
+            localStorage.setItem('userInfo', JSON.stringify({
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              tenantId: userData.tenantId,
+              role: userData.role,
+              schoolName: userData.schoolName,
+              email: userData.email,
+              isVerified: userData.isVerified,
+              isEmailConfirmed: userData.isEmailConfirmed,
+              mustChangePassword: userData.mustChangePassword,
+              token: userData.token
+            }));
+            
+            showSuccess("Please change your password to continue");
+            // Redirect to auth handler for password change
+            navigate('/auth');
+            return;
+          }
+        }
         
         if (err.response.status === 400 || err.response.status === 401) {
           // Extract error message from standardized API response format
