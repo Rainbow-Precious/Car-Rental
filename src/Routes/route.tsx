@@ -14,6 +14,7 @@ import BookingManagement from "../components/AdminDashboard/BookingManagement";
 import Settings from "../components/AdminDashboard/Settings";
 import AuthCheck from "../utils/AuthCheck";
 import CustomerDashboard from "../components/CustomerDashboard/CustomerDashboard";
+import RegisterPage from "../components/HomePage/Login/RegisterPage";
 
 // Public routes that anyone can access
 export const routes: RouteObject[] = [
@@ -36,10 +37,17 @@ export const routes: RouteObject[] = [
   {
     path: "/pricing",
     element: <PricingPage />,
-  },
-  {
+  },  {
     path: "/reset-password",
     element: <ResetPasswordPage />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
+    path: "/signup",
+    element: <RegisterPage />,
   },
 
   // Protected Admin Dashboard routes
