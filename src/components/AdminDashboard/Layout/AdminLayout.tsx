@@ -1,23 +1,15 @@
 import React, { useState, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface AdminLayoutProps {
   children: ReactNode;
   title?: string;
-  showBackButton?: boolean;
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({
   children,
   title = "Admin Dashboard",
-  showBackButton = false,
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    navigate("/dashboard");
-  };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

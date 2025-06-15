@@ -1,22 +1,28 @@
-import React from 'react';
-import { Box, Container, Grid, Typography, Link, IconButton } from '@mui/material';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import InstagramIcon from '@mui/icons-material/Instagram';
-import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import {
+  Box,
+  Container,
+  Grid,
+  Typography,
+  Link,
+  IconButton,
+} from "@mui/material";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import TwitterIcon from "@mui/icons-material/Twitter";
+import InstagramIcon from "@mui/icons-material/Instagram";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
 
 const quickLinks = [
-  { title: 'Our Fleet', href: '/fleet' },
-  { title: 'Rental Rates', href: '/rates' },
-  { title: 'Locations', href: '/locations' },
-  { title: 'Contact Us', href: '/contact' },
+  { title: "Our Fleet", href: "/fleet" },
+  { title: "Rental Rates", href: "/rates" },
+  { title: "Locations", href: "/locations" },
+  { title: "Contact Us", href: "/contact" },
 ];
 
 const supportLinks = [
-  { title: 'FAQs', href: '/faqs' },
-  { title: 'Terms & Conditions', href: '/terms' },
-  { title: 'Privacy Policy', href: '/privacy' },
-  { title: 'Roadside Assistance', href: '/assistance' },
+  { title: "FAQs", href: "/faqs" },
+  { title: "Terms & Conditions", href: "/terms" },
+  { title: "Privacy Policy", href: "/privacy" },
+  { title: "Roadside Assistance", href: "/assistance" },
 ];
 
 export default function Footer() {
@@ -24,8 +30,8 @@ export default function Footer() {
     <Box
       component="footer"
       sx={{
-        bgcolor: '#1a1a1a',
-        color: 'white',
+        bgcolor: "#1a1a1a",
+        color: "white",
         py: { xs: 4, md: 8 },
       }}
     >
@@ -38,8 +44,8 @@ export default function Footer() {
               sx={{
                 mb: { xs: 1.5, md: 2 },
                 fontWeight: 700,
-                color: '#1E90FF',
-                fontSize: { xs: '1.3rem', md: '1.5rem' },
+                color: "#1E90FF",
+                fontSize: { xs: "1.3rem", md: "1.5rem" },
               }}
             >
               DriveEase Rentals
@@ -50,33 +56,58 @@ export default function Footer() {
                 mb: { xs: 2, md: 3 },
                 opacity: 0.8,
                 lineHeight: 1.6,
-                fontSize: { xs: '0.97rem', md: '1rem' },
+                fontSize: { xs: "0.97rem", md: "1rem" },
               }}
             >
-              Your trusted partner for premium car rental services. Experience the freedom of the open road with our extensive fleet of well-maintained vehicles.
+              Your trusted partner for premium car rental services. Experience
+              the freedom of the open road with our extensive fleet of
+              well-maintained vehicles.
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: { xs: 2, md: 0 } }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                mb: { xs: 2, md: 0 },
+              }}
+            >
               <IconButton
                 aria-label="Facebook"
-                sx={{ color: 'white', '&:hover': { color: '#1E90FF' }, fontSize: { xs: 22, md: 24 } }}
+                sx={{
+                  color: "white",
+                  "&:hover": { color: "#1E90FF" },
+                  fontSize: { xs: 22, md: 24 },
+                }}
               >
                 <FacebookIcon />
               </IconButton>
               <IconButton
                 aria-label="Twitter"
-                sx={{ color: 'white', '&:hover': { color: '#1E90FF' }, fontSize: { xs: 22, md: 24 } }}
+                sx={{
+                  color: "white",
+                  "&:hover": { color: "#1E90FF" },
+                  fontSize: { xs: 22, md: 24 },
+                }}
               >
                 <TwitterIcon />
               </IconButton>
               <IconButton
                 aria-label="Instagram"
-                sx={{ color: 'white', '&:hover': { color: '#1E90FF' }, fontSize: { xs: 22, md: 24 } }}
+                sx={{
+                  color: "white",
+                  "&:hover": { color: "#1E90FF" },
+                  fontSize: { xs: 22, md: 24 },
+                }}
               >
                 <InstagramIcon />
               </IconButton>
               <IconButton
                 aria-label="LinkedIn"
-                sx={{ color: 'white', '&:hover': { color: '#1E90FF' }, fontSize: { xs: 22, md: 24 } }}
+                sx={{
+                  color: "white",
+                  "&:hover": { color: "#1E90FF" },
+                  fontSize: { xs: 22, md: 24 },
+                }}
               >
                 <LinkedInIcon />
               </IconButton>
@@ -89,8 +120,8 @@ export default function Footer() {
               sx={{
                 mb: { xs: 1.5, md: 2 },
                 fontWeight: 600,
-                color: '#1E90FF',
-                fontSize: { xs: '1.1rem', md: '1.2rem' },
+                color: "#1E90FF",
+                fontSize: { xs: "1.1rem", md: "1.2rem" },
               }}
             >
               Quick Links
@@ -98,7 +129,7 @@ export default function Footer() {
             <Box
               component="ul"
               sx={{
-                listStyle: 'none',
+                listStyle: "none",
                 p: 0,
                 m: 0,
               }}
@@ -114,15 +145,15 @@ export default function Footer() {
                   <Link
                     href={link.href}
                     sx={{
-                      color: 'white',
-                      textDecoration: 'none',
+                      color: "white",
+                      textDecoration: "none",
                       opacity: 0.8,
-                      transition: 'opacity 0.2s ease',
-                      '&:hover': {
+                      transition: "opacity 0.2s ease",
+                      "&:hover": {
                         opacity: 1,
-                        color: '#1E90FF',
+                        color: "#1E90FF",
                       },
-                      fontSize: { xs: '0.97rem', md: '1rem' },
+                      fontSize: { xs: "0.97rem", md: "1rem" },
                     }}
                   >
                     {link.title}
@@ -138,8 +169,8 @@ export default function Footer() {
               sx={{
                 mb: { xs: 1.5, md: 2 },
                 fontWeight: 600,
-                color: '#1E90FF',
-                fontSize: { xs: '1.1rem', md: '1.2rem' },
+                color: "#1E90FF",
+                fontSize: { xs: "1.1rem", md: "1.2rem" },
               }}
             >
               Support
@@ -147,7 +178,7 @@ export default function Footer() {
             <Box
               component="ul"
               sx={{
-                listStyle: 'none',
+                listStyle: "none",
                 p: 0,
                 m: 0,
               }}
@@ -163,15 +194,15 @@ export default function Footer() {
                   <Link
                     href={link.href}
                     sx={{
-                      color: 'white',
-                      textDecoration: 'none',
+                      color: "white",
+                      textDecoration: "none",
                       opacity: 0.8,
-                      transition: 'opacity 0.2s ease',
-                      '&:hover': {
+                      transition: "opacity 0.2s ease",
+                      "&:hover": {
                         opacity: 1,
-                        color: '#1E90FF',
+                        color: "#1E90FF",
                       },
-                      fontSize: { xs: '0.97rem', md: '1rem' },
+                      fontSize: { xs: "0.97rem", md: "1rem" },
                     }}
                   >
                     {link.title}
@@ -185,15 +216,15 @@ export default function Footer() {
           sx={{
             mt: { xs: 3, md: 6 },
             pt: { xs: 2, md: 3 },
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            textAlign: 'center',
+            borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+            textAlign: "center",
           }}
         >
           <Typography
             variant="body2"
             sx={{
               opacity: 0.6,
-              fontSize: { xs: '0.9rem', md: '1rem' },
+              fontSize: { xs: "0.9rem", md: "1rem" },
             }}
           >
             © {new Date().getFullYear()} DriveEase Rentals. All rights reserved.
@@ -202,4 +233,4 @@ export default function Footer() {
       </Container>
     </Box>
   );
-} 
+}
