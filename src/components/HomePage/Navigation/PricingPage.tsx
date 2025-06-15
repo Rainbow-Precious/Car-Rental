@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Navigation from "./Navigation";
-import Footer from "../../HomePage/Footer";
+import Footer from "../Footer/Footer";
 
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);

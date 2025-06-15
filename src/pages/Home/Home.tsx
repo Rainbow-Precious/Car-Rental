@@ -1,22 +1,16 @@
-import React from "react";
-import Navigation from "../../components/HomePage/Navigation/Navigation";
-import HeroSection from "../../components/HomePage/HeroSection";
-import FeaturesSection from "../../components/HomePage/FeaturesSection";
-import WhyChooseSection from "../../components/HomePage/WhyChooseSection";
-import Footer from "../../components/HomePage/Footer";
+import React from 'react';
+import HeroSection from '../../components/HomePage/HeroSection/HeroSection';
+import FeaturesSection from '../../components/HomePage/FeaturesSection/FeaturesSection';
+import WhyChooseSection from '../../components/HomePage/WhyChooseSection/WhyChooseSection';
+import Footer from '../../components/HomePage/Footer/Footer';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="w-screen min-h-screen flex flex-col text-white font-sans">
-      <Navigation />
-      <div className="flex justify-center flex-1">
-        <div className="max-w-5xl w-full bg-black">
-          <HeroSection />
-          <FeaturesSection />
-          <WhyChooseSection />
-        </div>
-      </div>
+    <>
+      <HeroSection />
+      <FeaturesSection />
+      <WhyChooseSection />
       <Footer />
-    </div>
+    </>
   );
 }

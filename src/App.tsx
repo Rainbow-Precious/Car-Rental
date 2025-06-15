@@ -1,39 +1,30 @@
 // src/App.tsx
-import { useRoutes } from "react-router-dom";
-import { routes } from "../src/Routes/route";
-import { Toaster } from '../src/utils/toast';
-import DevResetHelper from "./components/HomePage/Login/DevResetHelper";
+import { useRoutes, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import Navigation from './components/HomePage/Navigation/Navigation';
+import { routes } from './Routes/route';
 
-export default function App() {
-  // useRoutes will look at your routes array and render the matching element
-  const element = useRoutes(routes);
+function App() {
+  const routing = useRoutes(routes);
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
+
   return (
     <>
-      {element}
+      {!isAdminRoute && <Navigation />}
+      {routing}
       <Toaster
-        position="top-center"
-        reverseOrder={false}
-        gutter={8}
-        containerStyle={{
-          top: 20,
-          left: 20,
-          bottom: 20,
-          right: 20,
-        }}
+        position="top-right"
         toastOptions={{
-          // Default options for all toasts
-          duration: 5000,
+          duration: 3000,
           style: {
-            background: '#1F2937',
-            color: '#FFFFFF',
-            padding: '16px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-            fontSize: '16px',
+            background: '#333',
+            color: '#fff',
           },
         }}
       />
-      <DevResetHelper />
     </>
   );
 }
+
+export default App;
