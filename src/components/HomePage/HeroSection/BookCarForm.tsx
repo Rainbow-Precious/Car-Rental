@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, MenuItem, Grid } from '@mui/material';
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  MenuItem,
+  Grid,
+} from "@mui/material";
 
 const carTypes = [
-  'Sedan',
-  'SUV',
-  'Convertible',
-  'Hatchback',
-  'Luxury',
-  'Van',
-  'Pickup Truck',
+  "Sedan",
+  "SUV",
+  "Convertible",
+  "Hatchback",
+  "Luxury",
+  "Van",
+  "Pickup Truck",
 ];
 
 interface BookCarFormProps {
@@ -16,18 +23,21 @@ interface BookCarFormProps {
   initialCarType?: string;
 }
 
-export default function BookCarForm({ onClose, initialCarType }: BookCarFormProps) {
+export default function BookCarForm({
+  onClose,
+  initialCarType,
+}: BookCarFormProps) {
   const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    pickupLocation: '',
-    dropoffLocation: '',
-    pickupDate: '',
-    dropoffDate: '',
-    carType: initialCarType || '',
+    fullName: "",
+    email: "",
+    phone: "",
+    pickupLocation: "",
+    dropoffLocation: "",
+    pickupDate: "",
+    dropoffDate: "",
+    carType: initialCarType || "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
@@ -42,11 +52,11 @@ export default function BookCarForm({ onClose, initialCarType }: BookCarFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setSuccess(false);
     for (const key in form) {
       if (!form[key as keyof typeof form]) {
-        setError('Please fill in all fields.');
+        setError("Please fill in all fields.");
         return;
       }
     }
@@ -57,9 +67,21 @@ export default function BookCarForm({ onClose, initialCarType }: BookCarFormProp
   };
 
   return (
-    <Box sx={{ p: { xs: 1, sm: 3 }, width: { xs: '100%', sm: 370 }, maxWidth: '100vw' }}>
-      <Typography variant="h5" fontWeight={700} mb={2} color="#1E90FF" textAlign="center">
-        Rent Your Ride
+    <Box
+      sx={{
+        p: { xs: 1, sm: 3 },
+        width: { xs: "100%", sm: 370 },
+        maxWidth: "100vw",
+      }}
+    >
+      <Typography
+        variant="h5"
+        fontWeight={700}
+        mb={2}
+        color="#1E90FF"
+        textAlign="center"
+      >
+        Book Your Car
       </Typography>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={1}>
@@ -166,19 +188,36 @@ export default function BookCarForm({ onClose, initialCarType }: BookCarFormProp
               placeholder="Select car type"
             >
               {carTypes.map((type) => (
-                <MenuItem key={type} value={type}>{type}</MenuItem>
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
               ))}
             </TextField>
           </Grid>
           <Grid item xs={12}>
-            {error && <Typography color="error" variant="body2" mt={1}>{error}</Typography>}
-            {success && <Typography color="success.main" variant="body2" mt={1}>Rental request sent!</Typography>}
+            {error && (
+              <Typography color="error" variant="body2" mt={1}>
+                {error}
+              </Typography>
+            )}
+            {success && (
+              <Typography color="success.main" variant="body2" mt={1}>
+                Rental request sent!
+              </Typography>
+            )}
             <Button
               type="submit"
               variant="contained"
               color="primary"
               fullWidth
-              sx={{ mt: 2, py: 1.2, fontWeight: 700, fontSize: '1.1rem', borderRadius: 2, boxShadow: 2 }}
+              sx={{
+                mt: 2,
+                py: 1.2,
+                fontWeight: 700,
+                fontSize: "1.1rem",
+                borderRadius: 2,
+                boxShadow: 2,
+              }}
             >
               Rent Now
             </Button>
@@ -187,4 +226,4 @@ export default function BookCarForm({ onClose, initialCarType }: BookCarFormProp
       </form>
     </Box>
   );
-} 
+}

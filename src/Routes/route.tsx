@@ -37,7 +37,8 @@ export const routes: RouteObject[] = [
   {
     path: "/pricing",
     element: <PricingPage />,
-  },  {
+  },
+  {
     path: "/reset-password",
     element: <ResetPasswordPage />,
   },

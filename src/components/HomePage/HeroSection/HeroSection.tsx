@@ -198,7 +198,7 @@ export default function HeroSection() {
                     transition: "all 0.3s ease",
                   }}
                 >
-                  Rent Your Ride
+                  Book Now
                 </Button>
                 <Button
                   component={RouterLink}
