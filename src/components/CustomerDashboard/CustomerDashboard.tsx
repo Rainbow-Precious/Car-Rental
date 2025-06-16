@@ -29,6 +29,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PersonIcon from "@mui/icons-material/Person";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import BookingForm from "./BookingForm";
 
 interface Car {
   id: string;
@@ -44,10 +45,18 @@ interface Car {
 interface Booking {
   id: string;
   carId: string;
+  carDetails: string;
   startDate: string;
   endDate: string;
+  totalDays: number;
   status: "pending" | "active" | "completed" | "cancelled";
   totalPrice: number;
+  pickupLocation: string;
+  dropoffLocation: string;
+  driverLicense: string;
+  phoneNumber: string;
+  emergencyContact: string;
+  specialRequests: string;
 }
 
 const mockUser = {
@@ -134,19 +143,47 @@ const CustomerDashboard: React.FC = () => {
         "https://images.unsplash.com/photo-1503736317-1c1b1b1b1b1b?auto=format&fit=crop&q=80",
       location: "Enugu",
       rating: 4.6,
-    },
-  ]);
+    },  ]);
 
-  const [bookings] = useState<Booking[]>([
+  const [bookings, setBookings] = useState<Booking[]>([
     {
       id: "1",
       carId: "1",
+      carDetails: "Toyota Camry (2022)",
       startDate: "2024-03-20",
       endDate: "2024-03-25",
+      totalDays: 5,
       status: "active",
       totalPrice: 250,
+      pickupLocation: "Lagos Airport",
+      dropoffLocation: "Lagos Airport",
+      driverLicense: "ABC123456",
+      phoneNumber: "+234 901 234 5678",
+      emergencyContact: "+234 901 234 5679",
+      specialRequests: "",
     },
   ]);
+
+  // Booking form state
+  const [bookingFormOpen, setBookingFormOpen] = useState(false);
+  const [selectedCarForBooking, setSelectedCarForBooking] = useState<Car | null>(null);
+
+  // Handle opening booking form
+  const handleBookNow = (car: Car) => {
+    setSelectedCarForBooking(car);
+    setBookingFormOpen(true);
+  };
+
+  // Handle booking form close
+  const handleBookingFormClose = () => {
+    setBookingFormOpen(false);
+    setSelectedCarForBooking(null);
+  };
+
+  // Handle booking submission
+  const handleBookingSubmit = (bookingData: any) => {
+    setBookings(prev => [...prev, bookingData]);
+  };
 
   // Add state for the add car form
   const [newCar, setNewCar] = useState({
@@ -383,11 +420,11 @@ const CustomerDashboard: React.FC = () => {
                     sx={{ fontSize: { xs: "1.1rem", md: "1.2rem" } }}
                   >
                     ${car.price}/day
-                  </Typography>
-                  <Button
+                  </Typography>                  <Button
                     variant="contained"
                     color="primary"
                     fullWidth
+                    onClick={() => handleBookNow(car)}
                     sx={{
                       fontWeight: 700,
                       borderRadius: 2,
@@ -810,9 +847,16 @@ const CustomerDashboard: React.FC = () => {
                 Car added successfully!
               </Typography>
             )}
-          </form>
-        </Box>
+          </form>        </Box>
       )}
+
+      {/* Booking Form Dialog */}
+      <BookingForm
+        open={bookingFormOpen}
+        onClose={handleBookingFormClose}
+        car={selectedCarForBooking}
+        onBookingSubmit={handleBookingSubmit}
+      />
     </Box>
   );
 };
